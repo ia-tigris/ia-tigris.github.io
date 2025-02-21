@@ -24,7 +24,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-  <title>Academic Project Page</title>
+  <title>IA-TIGRIS: An Incremental and Adaptive Sampling-based Planner for Online Informative Path Planning</title>
   <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
   rel="stylesheet">
@@ -56,22 +56,37 @@
             <div class="is-size-5 publication-authors">
               <!-- Paper authors -->
               <span class="author-block">
-                <a href="FIRST AUTHOR PERSONAL LINK" target="_blank">First Author</a>,
+                <a href="https://bradymoon.com" target="_blank">Brady Moon</a><sup class="small-sup">1</sup>,
               </span>
               <span class="author-block">
-                <a href="SECOND AUTHOR PERSONAL LINK" target="_blank">Second Author</a>,
+                <a href="https://theairlab.org/team/alumni/nayana_suvarna/" target="_blank">Nayana Suvarna</a><sup class="small-sup">1</sup>,
               </span>
               <span class="author-block">
-                <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Third Author</a>
+                <a href="https://andrewjong.github.io" target="_blank">Andrew Jong</a><sup class="small-sup">1</sup>,
+              </span>
+              <br>
+              <span class="author-block">
+                <a href="https://satrajit-chatterjee.github.io" target="_blank">Satrajit Chatterjee</a><sup class="small-sup">2</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://theairlab.org/team/junbiny/" target="_blank">Junbin Yuan</a><sup class="small-sup">1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://theairlab.org/team/sebastian/" target="_blank">Sebastian Scherer</a><sup class="small-sup">1</sup>
               </span>
             </div>
-
-            <div class="is-size-5 publication-authors">
-              <span class="author-block">Institution Name
+            
+            <div class="is-size-6 publication-authors">
+              <span class="author-block"><sup>1</sup>Carnegie Mellon University</span>
+              <span class="author-block"><sup>2</sup>University at Pennsylvania</span>
+            </div>
+            
+            <!-- <div class="is-size-5 publication-authors"> -->
+              <!-- <span class="author-block">Institution Name -->
                 <!-- <br>Conferance name and year -->
-              </span>
+              <!-- </span> -->
               <!-- <span class="eql-cntrb"><small><br><sup>*</sup>Indicates Equal Contribution</small></span> -->
-            </div>
+            <!-- </div> -->
 
             <div class="column has-text-centered">
               <div class="publication-links">
@@ -110,7 +125,7 @@
 
                 <!-- YouTube link -->
                 <span class="link-block">
-                  <a href="https://github.com/YOUR REPO HERE" target="_blank"
+                  <a href="https://youtu.be/etFLanBdgHs" target="_blank"
                   class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                     <i class="fab fa-youtube"></i>
@@ -163,7 +178,12 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ullamcorper tellus sed ante aliquam tempus. Etiam porttitor urna feugiat nibh elementum, et tempor dolor mattis. Donec accumsan enim augue, a vulputate nisi sodales sit amet. Proin bibendum ex eget mauris cursus euismod nec et nibh. Maecenas ac gravida ante, nec cursus dui. Vivamus purus nibh, placerat ac purus eget, sagittis vestibulum metus. Sed vestibulum bibendum lectus gravida commodo. Pellentesque auctor leo vitae sagittis suscipit.
+            Planning paths that maximize information gain for robotic platforms has wide-ranging applications and significant potential impact. 
+            To effectively adapt to real-time data collection, informative path planning must be computed online and be responsive to new observations. 
+            In this work, we present <em>IA-TIGRIS</em>, an incremental and adaptive sampling-based informative path planner that can be run efficiently with onboard computation. Our approach leverages past planning efforts through incremental refinement while continuously adapting to updated world beliefs. We additionally present detailed implementation and optimization insights to facilitate real-world deployment, along with an array of reward functions tailored to specific missions and behaviors.
+            Extensive simulation results demonstrate <em>IA-TIGRIS</em> generates higher-quality paths compared to baseline methods.
+            We validate our planner on two distinct hardware platforms: a hexarotor UAV and a fixed-wing UAV, each having unique motion models and configuration spaces.
+            Our results show up to a <em>41% improvement in information gain</em> compared to baseline methods, suggesting significant potential for deployment in real-world applications.
           </p>
         </div>
       </div>

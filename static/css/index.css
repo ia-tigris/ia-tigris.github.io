@@ -2,6 +2,9 @@ body {
   font-family: 'Noto Sans', sans-serif;
 }
 
+.small-sup {
+  font-size: 0.65em; /* Adjust the size as needed */
+}
 
 .footer .icon-link {
     font-size: 25px;
