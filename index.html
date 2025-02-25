@@ -43,6 +43,15 @@
   <script src="static/js/bulma-carousel.min.js"></script>
   <script src="static/js/bulma-slider.min.js"></script>
   <script src="static/js/index.js"></script>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143856064-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-LZ5X68ZYSN');
+  </script>
 </head>
 <body>
 
@@ -92,7 +101,7 @@
               <div class="publication-links">
                     <!-- Arxiv PDF link -->
                 <span class="link-block">
-                  <a href="https://arxiv.org/pdf/<ARXIV PAPER ID>.pdf" target="_blank"
+                  <a href="https://arxiv.org/pdf/2502.15961.pdf" target="_blank"
                   class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                     <i class="fas fa-file-pdf"></i>
@@ -136,7 +145,7 @@
 
                 <!-- ArXiv abstract Link -->
                 <span class="link-block">
-                  <a href="https://arxiv.org/abs/<ARXIV PAPER ID>" target="_blank"
+                  <a href="https://arxiv.org/abs/2502.15961" target="_blank"
                   class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                     <i class="ai ai-arxiv"></i>
@@ -234,13 +243,13 @@
 <!-- End image carousel -->
 
 <!-- Youtube video -->
-<section class="hero is-small is-light">
+<section class="hero is-small">
   <div class="hero-body">
-    <div class="container">
+    <div class="container is-max-desktop">
       <!-- Paper video. -->
       <h2 class="title is-3">Video</h2>
       <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
+        <div class="column">
           
           <div class="publication-video">
             <!-- Youtube embed code here -->
@@ -293,7 +302,15 @@
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
-      <pre><code>BibTex Code Here</code></pre>
+      <pre><code>@misc{moon2025iatigris,
+    title={IA-TIGRIS: An Incremental and Adaptive Sampling-Based Planner for Online Informative Path Planning}, 
+    author={Brady Moon and Nayana Suvarna and Andrew Jong and Satrajit Chatterjee and Junbin Yuan and Sebastian Scherer},
+    year={2025},
+    eprint={2502.15961},
+    archivePrefix={arXiv},
+    primaryClass={cs.RO},
+    url={https://arxiv.org/abs/2502.15961} 
+}</code></pre>
     </div>
 </section>
 <!--End BibTex citation -->

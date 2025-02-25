@@ -1,19 +1,5 @@
 # IA-TIGRIS: An Incremental and Adaptive Sampling-based Planner for Online Informative Path Planning
-Webpage for the paper [IA-TIGRIS: An Incremental and Adaptive Sampling-based Planner for Online Informative Path Planning]().
-
-
-
-## Start using the template
-
-**IMPORTANT!** Make sure to replace the `favicon.ico` under `static/images/` with one of your own, otherwise your favicon is going to be a dreambooth image of me.
-
-## Components
-- Teaser video
-- Images Carousel
-- Youtube embedding
-- Video Carousel
-- PDF Poster
-- Bibtex citation
+Webpage for the paper [IA-TIGRIS: An Incremental and Adaptive Sampling-based Planner for Online Informative Path Planning](https://arxiv.org/abs/2502.15961).
 
 ## Tips:
 - The `index.html` file contains comments instructing you what to replace, you should follow these comments.
