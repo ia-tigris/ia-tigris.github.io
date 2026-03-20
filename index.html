@@ -30,8 +30,6 @@
   rel="stylesheet">
 
   <link rel="stylesheet" href="static/css/bulma.min.css">
-  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
@@ -40,9 +38,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
   <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script src="static/js/bulma-carousel.min.js"></script>
-  <script src="static/js/bulma-slider.min.js"></script>
   <script src="static/js/index.js"></script>
+  <script src="static/js/planner-demo.js"></script>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143856064-1"></script>
@@ -290,6 +287,123 @@
 </section>
 <!-- End youtube video -->
 
+<!-- Planner demo -->
+<section class="section hero is-light" id="planner-demo">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 has-text-centered">Planner Demo</h2>
+        <p class="has-text-justified">
+          This interactive demo captures many of the core ideas behind IA-TIGRIS in a lightweight browser setting:
+          weighted sampling candidate states, estimating path-integrated information gain, tree-recycling, heuristic pruning, etc. 
+          Fair warning, this was vibe-coded from the source code and paper and is not meant to be a polished demo, 
+          but we hope it can be a fun way to get a better intuition for how the planner works and the impact of different parameters.
+        </p>
+
+        <div class="planner-demo-controls">
+          <div class="planner-demo-grid">
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-scenario">Scenario</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select id="demo-scenario"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-budget">Budget (<span id="demo-budget-value">260</span>)</label>
+            <div class="control">
+              <input id="demo-budget" class="planner-slider" step="5" min="80" max="600" value="260" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-planning-horizon">Planning Horizon (<span id="demo-planning-horizon-value">140</span>)</label>
+            <div class="control">
+              <input id="demo-planning-horizon" class="planner-slider" step="5" min="40" max="600" value="140" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-max-samples">Max Samples (<span id="demo-max-samples-value">250</span>)</label>
+            <div class="control">
+              <input id="demo-max-samples" class="planner-slider" step="10" min="50" max="5000" value="250" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-extend-distance">Extend Distance (<span id="demo-extend-distance-value">3.0</span>)</label>
+            <div class="control">
+              <input id="demo-extend-distance" class="planner-slider" step="0.2" min="0.8" max="8.0" value="3.0" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-extend-radius">Extend Radius (<span id="demo-extend-radius-value">6.0</span>)</label>
+            <div class="control">
+              <input id="demo-extend-radius" class="planner-slider" step="0.2" min="1.0" max="12.0" value="6.0" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-prune-radius">Prune Radius (<span id="demo-prune-radius-value">2.4</span>)</label>
+            <div class="control">
+              <input id="demo-prune-radius" class="planner-slider" step="0.2" min="0.8" max="8.0" value="2.4" type="range">
+            </div>
+          </div>
+
+          <div class="field planner-demo-card">
+            <label class="label" for="demo-seed">Seed</label>
+            <div class="control">
+              <input id="demo-seed" class="input" step="1" min="1" max="1000000" value="42" type="number">
+            </div>
+          </div>
+          </div>
+
+          <div class="planner-demo-actions">
+            <div class="field is-grouped is-grouped-multiline planner-demo-buttons">
+              <p class="control">
+                <button id="demo-run" class="button is-link is-small">Plan</button>
+              </p>
+              <p class="control">
+                <button id="demo-pause" class="button is-light is-small">Pause</button>
+              </p>
+              <p class="control">
+                <button id="demo-step" class="button is-light is-small">Plan Step</button>
+              </p>
+              <p class="control">
+                <button id="demo-replan" class="button is-info is-small">Execute + Recycle</button>
+              </p>
+              <p class="control">
+                <button id="demo-reset" class="button is-warning is-small">Reset</button>
+              </p>
+            </div>
+
+            <div class="planner-demo-toggles">
+              <label class="checkbox">
+                <input type="checkbox" id="demo-deterministic" checked>
+                deterministic reset
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" id="demo-include-edge" checked>
+                include edge rewards
+              </label>
+            </div>
+          </div>
+          <div id="demo-workflow-hint" class="planner-demo-hint"></div>
+        </div>
+
+        <div class="planner-demo-canvas-wrap">
+          <canvas id="planner-demo-canvas" width="920" height="560"></canvas>
+        </div>
+        <div id="planner-demo-status" class="planner-demo-status"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End planner demo -->
+
 
 <!-- Video carousel -->
 <!-- <section class="hero is-small"> -->
@@ -336,7 +450,6 @@
     journal={IEEE Transactions on Robotics}, 
     year={2026},
     pages={1-19},
-    keywords={Robot sensing systems;Robots;Planning;Trees (botanical);Trajectory;Optimization;Autonomous aerial vehicles;Sensors;Real-time systems;Logic;Aerial systems;field robots;motion and path planning;perception and autonomy;reactive and sensor-based planning},
     doi={10.1109/TRO.2026.3672542}
 }</code></pre>
     </div>
