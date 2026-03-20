@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  var COST_PER_GRID_UNIT = 5.3;
+
   function mulberry32(seed) {
     var t = seed >>> 0;
     return function () {
@@ -36,6 +38,10 @@
     var dx = a.x - b.x;
     var dy = a.y - b.y;
     return dx * dx + dy * dy;
+  }
+
+  function dist(a, b) {
+    return Math.sqrt(dist2(a, b));
   }
 
   function isDescendantOf(node, ancestor) {
@@ -150,7 +156,8 @@
       c.extendDistanceValue.textContent = Number(c.extendDistance.value).toFixed(1);
       c.extendRadiusValue.textContent = Number(c.extendRadius.value).toFixed(1);
       c.pruneRadiusValue.textContent = Number(c.pruneRadius.value).toFixed(1);
-      c.autoPlanWindowValue.textContent = Number(c.autoPlanWindow.value).toFixed(1);
+      c.autoSpeedValue.textContent = Number(c.autoSpeed.value).toFixed(1);
+      c.autoMaxPlanTimeValue.textContent = Number(c.autoMaxPlanTime.value).toFixed(1);
       c.autoExecDelayValue.textContent = Number(c.autoExecDelay.value).toFixed(1);
     }
 
@@ -193,10 +200,17 @@
       self.reset();
     });
 
-    c.autoPlanWindow.addEventListener('input', function () {
+    c.autoSpeed.addEventListener('input', function () {
       updateSliderLabels();
       if (self.state) {
-        self.state.autoPlanWindowMs = Number(c.autoPlanWindow.value) * 1000;
+        self.state.autoRobotSpeed = Number(c.autoSpeed.value);
+      }
+    });
+
+    c.autoMaxPlanTime.addEventListener('input', function () {
+      updateSliderLabels();
+      if (self.state) {
+        self.state.autoMaxPlanWindowMs = Number(c.autoMaxPlanTime.value) * 1000;
       }
     });
 
@@ -309,6 +323,36 @@
     return !!(this.state.bestPath && this.state.bestPath.length > 1 && this.state.plannedSinceRecycle);
   };
 
+  PlannerDemo.prototype.currentSegmentLength = function () {
+    if (!this.state.bestPath || this.state.bestPath.length < 2) {
+      return 0;
+    }
+    return dist(this.state.bestPath[0], this.state.bestPath[1]);
+  };
+
+  PlannerDemo.prototype.computeAdaptivePlanWindowMs = function () {
+    var s = this.state;
+    var speed = Math.max(1e-3, s.autoRobotSpeed);
+    var segmentLength = this.currentSegmentLength();
+    var minWindowMs = s.autoCycleCount === 0 ? s.autoInitialMinPlanWindowMs : s.autoMinPlanWindowMs;
+
+    var rawMs;
+    if (segmentLength > 1e-6) {
+      rawMs = (segmentLength / speed) * 1000 * s.autoAdaptiveFactor;
+    } else {
+      rawMs = s.autoComputedPlanWindowMs > 0 ? s.autoComputedPlanWindowMs : minWindowMs;
+    }
+
+    s.autoLastSegmentLength = segmentLength;
+    return clamp(rawMs, minWindowMs, s.autoMaxPlanWindowMs);
+  };
+
+  PlannerDemo.prototype.startPlanningPhaseWindow = function (now) {
+    this.state.autoComputedPlanWindowMs = this.computeAdaptivePlanWindowMs();
+    this.state.autoPlanWindowStartTs = now;
+    this.state.autoAcceptedAtWindowStart = this.state.accepted;
+  };
+
   PlannerDemo.prototype.startAutoCycle = function () {
     if (!this.state || this.state.uiMode !== 'auto') {
       return;
@@ -320,6 +364,8 @@
     this.state.autoExecuteStartTs = 0;
     this.state.autoStallCycles = 0;
     this.state.autoStopReason = '';
+    this.state.autoComputedPlanWindowMs = this.state.autoInitialMinPlanWindowMs;
+    this.state.autoLastSegmentLength = 0;
     this.autoTick();
   };
 
@@ -634,7 +680,7 @@
       x: parent.x + (dx / directDistance) * extend,
       y: parent.y + (dy / directDistance) * extend
     };
-    var edgeCost = extend * 5.3;
+    var edgeCost = extend * COST_PER_GRID_UNIT;
 
     if (!this.isEdgeInsideMask(parent, newPoint)) {
       this.state.rejected += 1;
@@ -816,10 +862,9 @@
 
     if (this.state.autoPhase === 'planning') {
       if (!this.state.autoPlanWindowStartTs) {
-        this.state.autoPlanWindowStartTs = now;
-        this.state.autoAcceptedAtWindowStart = this.state.accepted;
+        this.startPlanningPhaseWindow(now);
       }
-      var planningDeadline = this.state.autoPlanWindowStartTs + this.state.autoPlanWindowMs;
+      var planningDeadline = this.state.autoPlanWindowStartTs + this.state.autoComputedPlanWindowMs;
       var sliceEnd = Math.min(performance.now() + this.autoPlanningSliceMs, planningDeadline);
       while (performance.now() < sliceEnd) {
         var ok = this.plannerStep();
@@ -847,8 +892,7 @@
             this.render();
             return;
           }
-          this.state.autoPlanWindowStartTs = now;
-          this.state.autoAcceptedAtWindowStart = this.state.accepted;
+          this.startPlanningPhaseWindow(now);
         } else {
           this.state.autoStallCycles = 0;
           this.state.autoPhase = 'executing';
@@ -858,8 +902,7 @@
     } else {
       if (!this.canExecuteCurrentPlan()) {
         this.state.autoPhase = 'planning';
-        this.state.autoPlanWindowStartTs = now;
-        this.state.autoAcceptedAtWindowStart = this.state.accepted;
+        this.startPlanningPhaseWindow(now);
       } else {
         if (!this.state.autoExecuteStartTs) {
           this.state.autoExecuteStartTs = now;
@@ -875,9 +918,8 @@
           }
 
           this.state.autoPhase = 'planning';
-          this.state.autoPlanWindowStartTs = now;
+          this.state.autoPlanWindowStartTs = 0;
           this.state.autoExecuteStartTs = 0;
-          this.state.autoAcceptedAtWindowStart = this.state.accepted;
         }
       }
     }
@@ -942,7 +984,13 @@
       autoRunning: false,
       autoPhase: 'planning',
       autoCycleCount: 0,
-      autoPlanWindowMs: Number(this.controls.autoPlanWindow.value) * 1000,
+      autoRobotSpeed: Number(this.controls.autoSpeed.value),
+      autoMaxPlanWindowMs: Number(this.controls.autoMaxPlanTime.value) * 1000,
+      autoInitialMinPlanWindowMs: 2000,
+      autoMinPlanWindowMs: 300,
+      autoAdaptiveFactor: 1.0,
+      autoComputedPlanWindowMs: 1200,
+      autoLastSegmentLength: 0,
       autoPlanWindowStartTs: 0,
       autoExecuteDelayMs: Number(this.controls.autoExecDelay.value) * 1000,
       autoExecuteStartTs: 0,
@@ -1104,9 +1152,18 @@
     var s = this.state;
     var bestGain = s.best ? s.best.gain : 0;
     var bestCost = s.best ? s.best.cost : 0;
+    var budgetDistance = s.budget / COST_PER_GRID_UNIT;
+    var executedDistance = s.executedCost / COST_PER_GRID_UNIT;
     var modeSummary = s.uiMode === 'auto'
       ? ('Mode: Auto ' + (s.autoRunning ? '(running)' : '(stopped)') + ' | Cycle: ' + s.autoCycleCount + ' | Phase: ' + s.autoPhase)
       : 'Mode: Manual';
+    var autoDetail = '';
+    if (s.uiMode === 'auto') {
+      autoDetail =
+        ' | Plan window: ' + (s.autoComputedPlanWindowMs / 1000).toFixed(1) + 's' +
+        ' (segment ' + s.autoLastSegmentLength.toFixed(2) +
+        ' / speed ' + s.autoRobotSpeed.toFixed(1) + ' grid units/s)';
+    }
 
     if (this.controls.modeChip) {
       this.controls.modeChip.textContent = modeSummary;
@@ -1122,10 +1179,12 @@
       ' | Closed: ' + s.closedNodeIds.size +
       ' | Recycles: ' + s.replanCount +
       ' | Executed cost: ' + s.executedCost.toFixed(1) +
+      ' (~' + executedDistance.toFixed(1) + ' grid units)' +
       ' | Edge gain: ' + s.edgeGainTotal.toFixed(2) +
       ' | Best gain: ' + bestGain.toFixed(2) +
       ' | Best cost: ' + bestCost.toFixed(1) + ' / ' + s.effectiveHorizon.toFixed(1) +
-      ' (budget ' + s.budget.toFixed(1) + ')' +
+      ' (budget ' + s.budget.toFixed(1) + ', ~' + budgetDistance.toFixed(1) + ' grid units)' +
+      autoDetail +
       ' | Seed: ' + this.seed;
   };
 
@@ -1151,8 +1210,10 @@
         autoControls: document.getElementById('demo-auto-controls'),
         autoStart: document.getElementById('demo-auto-start'),
         autoStop: document.getElementById('demo-auto-stop'),
-        autoPlanWindow: document.getElementById('demo-auto-plan-window'),
-        autoPlanWindowValue: document.getElementById('demo-auto-plan-window-value'),
+        autoSpeed: document.getElementById('demo-auto-speed'),
+        autoSpeedValue: document.getElementById('demo-auto-speed-value'),
+        autoMaxPlanTime: document.getElementById('demo-auto-max-plan-time'),
+        autoMaxPlanTimeValue: document.getElementById('demo-auto-max-plan-time-value'),
         autoExecDelay: document.getElementById('demo-auto-exec-delay'),
         autoExecDelayValue: document.getElementById('demo-auto-exec-delay-value'),
         budget: document.getElementById('demo-budget'),
@@ -1184,7 +1245,8 @@
     if (!root.canvas || !root.status || !root.hint || !root.controls.scenario ||
       !root.controls.modeManual || !root.controls.modeAuto ||
       !root.controls.autoStart || !root.controls.autoStop ||
-      !root.controls.autoPlanWindow || !root.controls.autoExecDelay) {
+      !root.controls.autoSpeed || !root.controls.autoMaxPlanTime ||
+      !root.controls.autoExecDelay) {
       return;
     }
 
