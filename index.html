@@ -326,9 +326,9 @@
           </div>
 
           <div class="field planner-demo-card">
-            <label class="label" for="demo-max-samples">Max Samples (<span id="demo-max-samples-value">250</span>)</label>
+            <label class="label" for="demo-max-samples">Max Samples (<span id="demo-max-samples-value">2000</span>)</label>
             <div class="control">
-              <input id="demo-max-samples" class="planner-slider" step="10" min="50" max="5000" value="250" type="range">
+              <input id="demo-max-samples" class="planner-slider" step="100" min="100" max="5000" value="2000" type="range">
             </div>
           </div>
 
@@ -362,52 +362,66 @@
           </div>
 
           <div class="planner-demo-actions">
-            <div class="planner-demo-modebar">
-              <div id="demo-mode-chip" class="planner-demo-mode-chip">Mode: Manual</div>
+            <div class="planner-demo-mode-row">
               <div class="buttons has-addons planner-demo-mode-toggle">
                 <button id="demo-mode-manual" class="button is-link is-small" type="button">Manual</button>
                 <button id="demo-mode-auto" class="button is-light is-small" type="button">Auto</button>
               </div>
+              <div id="demo-mode-chip" class="planner-demo-mode-chip">Mode: Manual</div>
             </div>
 
-            <div id="demo-manual-actions" class="field is-grouped is-grouped-multiline planner-demo-buttons">
-              <p class="control">
-                <button id="demo-run" class="button is-link is-small">Plan</button>
-              </p>
-              <p class="control">
-                <button id="demo-pause" class="button is-light is-small">Pause</button>
-              </p>
-              <p class="control">
-                <button id="demo-step" class="button is-light is-small">Plan Step</button>
-              </p>
-              <p class="control">
-                <button id="demo-replan" class="button is-info is-small">Execute + Recycle</button>
-              </p>
-            </div>
-
-            <div id="demo-auto-controls" class="planner-demo-auto-controls">
-              <div class="field planner-demo-card planner-demo-auto-slider">
-                <label class="label" for="demo-auto-plan-window">Auto Planning Window (s) (<span id="demo-auto-plan-window-value">2.0</span>)</label>
-                <div class="control">
-                  <input id="demo-auto-plan-window" class="planner-slider" step="0.1" min="0.1" max="10.0" value="2.0" type="range">
-                </div>
-              </div>
-              <div class="field planner-demo-card planner-demo-auto-slider">
-                <label class="label" for="demo-auto-exec-delay">Auto Execute Delay (s) (<span id="demo-auto-exec-delay-value">0.5</span>)</label>
-                <div class="control">
-                  <input id="demo-auto-exec-delay" class="planner-slider" step="0.1" min="0.0" max="5.0" value="0.5" type="range">
-                </div>
-              </div>
-              <div id="demo-auto-actions" class="field is-grouped is-grouped-multiline planner-demo-buttons">
+            <div class="planner-demo-button-row">
+              <div id="demo-manual-actions" class="field is-grouped is-grouped-multiline planner-demo-buttons">
                 <p class="control">
-                  <button id="demo-auto-start" class="button is-link is-small" type="button">Start Auto</button>
+                  <button id="demo-run" class="button is-link is-small">Plan</button>
                 </p>
                 <p class="control">
-                  <button id="demo-auto-stop" class="button is-light is-small" type="button">Stop Auto</button>
+                  <button id="demo-pause" class="button is-light is-small">Pause</button>
+                </p>
+                <p class="control">
+                  <button id="demo-step" class="button is-light is-small">Plan Step</button>
+                </p>
+                <p class="control">
+                  <button id="demo-replan" class="button is-info is-small">Execute + Recycle</button>
+                </p>
+              </div>
+
+              <div id="demo-auto-controls" class="planner-demo-auto-controls">
+                <div id="demo-auto-actions" class="field is-grouped is-grouped-multiline planner-demo-buttons">
+                  <p class="control">
+                    <button id="demo-auto-start" class="button is-link is-small" type="button">Start Auto</button>
+                  </p>
+                  <p class="control">
+                    <button id="demo-auto-stop" class="button is-light is-small" type="button">Stop Auto</button>
+                  </p>
+                </div>
+                <div class="planner-demo-auto-slider-row">
+                  <div class="field planner-demo-card planner-demo-auto-slider">
+                    <label class="label" for="demo-auto-plan-window">Auto Planning Window (s) (<span id="demo-auto-plan-window-value">2.0</span>)</label>
+                    <div class="control">
+                      <input id="demo-auto-plan-window" class="planner-slider" step="0.1" min="0.1" max="10.0" value="2.0" type="range">
+                    </div>
+                  </div>
+                  <div class="field planner-demo-card planner-demo-auto-slider">
+                    <label class="label" for="demo-auto-exec-delay">Auto Execute Delay (s) (<span id="demo-auto-exec-delay-value">0.5</span>)</label>
+                    <div class="control">
+                      <input id="demo-auto-exec-delay" class="planner-slider" step="0.1" min="0.0" max="5.0" value="0.5" type="range">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field is-grouped planner-demo-reset-wrap">
+                <p class="control">
+                  <button id="demo-reset" class="button is-warning is-small">Reset</button>
                 </p>
               </div>
             </div>
 
+          </div>
+          <div id="demo-workflow-hint" class="planner-demo-hint"></div>
+          <details class="planner-demo-advanced">
+            <summary>Advanced Settings</summary>
             <div class="planner-demo-toggles">
               <label class="checkbox">
                 <input type="checkbox" id="demo-deterministic" checked>
@@ -418,13 +432,7 @@
                 include edge rewards
               </label>
             </div>
-            <div class="field is-grouped planner-demo-reset-wrap">
-              <p class="control">
-                <button id="demo-reset" class="button is-warning is-small">Reset</button>
-              </p>
-            </div>
-          </div>
-          <div id="demo-workflow-hint" class="planner-demo-hint"></div>
+          </details>
         </div>
 
         <div class="planner-demo-canvas-wrap">

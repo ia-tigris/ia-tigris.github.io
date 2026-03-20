@@ -195,12 +195,16 @@
 
     c.autoPlanWindow.addEventListener('input', function () {
       updateSliderLabels();
-      self.reset();
+      if (self.state) {
+        self.state.autoPlanWindowMs = Number(c.autoPlanWindow.value) * 1000;
+      }
     });
 
     c.autoExecDelay.addEventListener('input', function () {
       updateSliderLabels();
-      self.reset();
+      if (self.state) {
+        self.state.autoExecuteDelayMs = Number(c.autoExecDelay.value) * 1000;
+      }
     });
 
     c.deterministic.addEventListener('change', function () {
