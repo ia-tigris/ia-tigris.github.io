@@ -221,7 +221,7 @@ body {
 .planner-demo-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.6rem;
   margin-top: 0.2rem;
   flex-wrap: wrap;
@@ -229,6 +229,55 @@ body {
 
 .planner-demo-buttons {
   margin-bottom: 0 !important;
+}
+
+.planner-demo-modebar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-right: 0.1rem;
+}
+
+.planner-demo-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.55rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: #e8f0fb;
+  color: #2b5376;
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.planner-demo-mode-toggle {
+  margin-bottom: 0 !important;
+  gap: 0 !important;
+}
+
+.planner-demo-auto-controls {
+  display: none;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.planner-demo-auto-controls.is-visible {
+  display: flex;
+}
+
+.planner-demo-auto-slider {
+  width: 220px;
+}
+
+.planner-demo-reset-wrap {
+  margin-bottom: 0 !important;
+  margin-left: auto;
+}
+
+.planner-demo-hidden {
+  display: none !important;
 }
 
 .planner-demo-toggles {
@@ -259,6 +308,14 @@ body {
 @media screen and (max-width: 768px) {
   .planner-demo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .planner-demo-auto-slider {
+    width: 100%;
+  }
+
+  .planner-demo-reset-wrap {
+    margin-left: 0;
   }
 }
 

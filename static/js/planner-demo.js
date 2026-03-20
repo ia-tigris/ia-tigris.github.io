@@ -113,6 +113,9 @@
     this.hintEl = root.hint;
     this.controls = root.controls;
 
+    this.uiMode = 'manual';
+    this.manualSamplesPerFrame = 100;
+    this.autoPlanningSliceMs = 10;
     this.running = false;
     this.rafId = null;
 
@@ -147,6 +150,8 @@
       c.extendDistanceValue.textContent = Number(c.extendDistance.value).toFixed(1);
       c.extendRadiusValue.textContent = Number(c.extendRadius.value).toFixed(1);
       c.pruneRadiusValue.textContent = Number(c.pruneRadius.value).toFixed(1);
+      c.autoPlanWindowValue.textContent = Number(c.autoPlanWindow.value).toFixed(1);
+      c.autoExecDelayValue.textContent = Number(c.autoExecDelay.value).toFixed(1);
     }
 
     c.scenario.addEventListener('change', function () {
@@ -188,6 +193,16 @@
       self.reset();
     });
 
+    c.autoPlanWindow.addEventListener('input', function () {
+      updateSliderLabels();
+      self.reset();
+    });
+
+    c.autoExecDelay.addEventListener('input', function () {
+      updateSliderLabels();
+      self.reset();
+    });
+
     c.deterministic.addEventListener('change', function () {
       self.reset();
     });
@@ -197,36 +212,54 @@
     });
 
     c.run.addEventListener('click', function () {
+      if (!self.state) {
+        return;
+      }
+      if (self.state && self.state.uiMode !== 'manual') {
+        return;
+      }
       self.running = true;
+      self.state.autoRunning = false;
       self.tick();
     });
 
     c.pause.addEventListener('click', function () {
-      self.running = false;
-      if (self.rafId) {
-        cancelAnimationFrame(self.rafId);
-        self.rafId = null;
-      }
+      self.stopLoops('');
       self.render();
     });
 
     c.step.addEventListener('click', function () {
-      self.running = false;
-      if (self.rafId) {
-        cancelAnimationFrame(self.rafId);
-        self.rafId = null;
+      if (self.state && self.state.uiMode !== 'manual') {
+        return;
       }
+      self.stopLoops('');
       self.plannerStep();
       self.render();
     });
 
     c.replan.addEventListener('click', function () {
-      self.running = false;
-      if (self.rafId) {
-        cancelAnimationFrame(self.rafId);
-        self.rafId = null;
+      if (self.state && self.state.uiMode !== 'manual') {
+        return;
       }
+      self.stopLoops('');
       self.replanTreeStep();
+      self.render();
+    });
+
+    c.modeManual.addEventListener('click', function () {
+      self.setMode('manual');
+    });
+
+    c.modeAuto.addEventListener('click', function () {
+      self.setMode('auto');
+    });
+
+    c.autoStart.addEventListener('click', function () {
+      self.startAutoCycle();
+    });
+
+    c.autoStop.addEventListener('click', function () {
+      self.stopAutoCycle('Stopped by user.');
       self.render();
     });
 
@@ -237,9 +270,85 @@
     updateSliderLabels();
   };
 
+  PlannerDemo.prototype.stopLoops = function (autoReason) {
+    this.running = false;
+    if (this.state) {
+      this.state.autoRunning = false;
+      if (autoReason !== undefined && autoReason !== null) {
+        this.state.autoStopReason = autoReason;
+      }
+    }
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  };
+
+  PlannerDemo.prototype.setMode = function (mode) {
+    var nextMode = mode === 'auto' ? 'auto' : 'manual';
+    this.uiMode = nextMode;
+    this.stopLoops(nextMode === 'auto'
+      ? 'Auto mode selected.'
+      : '');
+    if (this.state) {
+      this.state.uiMode = nextMode;
+      this.state.autoPhase = 'planning';
+      this.state.autoPlanWindowStartTs = 0;
+      this.state.autoExecuteStartTs = 0;
+      this.state.autoStopReason = '';
+      this.state.autoStallCycles = 0;
+    }
+    this.render();
+  };
+
+  PlannerDemo.prototype.canExecuteCurrentPlan = function () {
+    return !!(this.state.bestPath && this.state.bestPath.length > 1 && this.state.plannedSinceRecycle);
+  };
+
+  PlannerDemo.prototype.startAutoCycle = function () {
+    if (!this.state || this.state.uiMode !== 'auto') {
+      return;
+    }
+    this.stopLoops('');
+    this.state.autoRunning = true;
+    this.state.autoPhase = 'planning';
+    this.state.autoPlanWindowStartTs = 0;
+    this.state.autoExecuteStartTs = 0;
+    this.state.autoStallCycles = 0;
+    this.state.autoStopReason = '';
+    this.autoTick();
+  };
+
+  PlannerDemo.prototype.stopAutoCycle = function (reason) {
+    this.stopLoops(reason || 'Auto stopped.');
+  };
+
   PlannerDemo.prototype.updateWorkflowUI = function () {
-    var canExecute = this.state.bestPath && this.state.bestPath.length > 1 && this.state.plannedSinceRecycle;
+    var c = this.controls;
+    var isAuto = this.state.uiMode === 'auto';
+    var canExecute = this.canExecuteCurrentPlan();
     this.controls.replan.disabled = !canExecute;
+
+    c.manualActions.classList.toggle('planner-demo-hidden', isAuto);
+    c.autoControls.classList.toggle('is-visible', isAuto);
+    c.modeManual.classList.toggle('is-link', !isAuto);
+    c.modeManual.classList.toggle('is-light', isAuto);
+    c.modeAuto.classList.toggle('is-link', isAuto);
+    c.modeAuto.classList.toggle('is-light', !isAuto);
+    c.autoStart.disabled = !isAuto || this.state.autoRunning;
+    c.autoStop.disabled = !isAuto || !this.state.autoRunning;
+    c.pause.disabled = isAuto;
+
+    if (isAuto) {
+      if (this.state.autoRunning) {
+        this.hintEl.textContent = 'Auto cycling... click "Stop Auto" to pause.';
+      } else if (this.state.autoStopReason) {
+        this.hintEl.textContent = this.state.autoStopReason;
+      } else {
+        this.hintEl.textContent = 'Click "Start Auto" to begin plan -> execute -> recycle cycles.';
+      }
+      return;
+    }
 
     if (canExecute) {
       this.hintEl.textContent = 'Plan is ready. Click "Execute + Recycle" to advance, then click "Plan" again.';
@@ -675,11 +784,11 @@
   };
 
   PlannerDemo.prototype.tick = function () {
-    if (!this.running) {
+    if (!this.running || this.state.uiMode !== 'manual') {
       return;
     }
 
-    var stillHasBudget = this.stepMany(6);
+    var stillHasBudget = this.stepMany(this.manualSamplesPerFrame);
     this.render();
 
     if (!stillHasBudget || this.state.samples >= this.state.maxSamples) {
@@ -694,12 +803,91 @@
     });
   };
 
-  PlannerDemo.prototype.reset = function () {
-    this.running = false;
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
+  PlannerDemo.prototype.autoTick = function (timestamp) {
+    if (!this.state.autoRunning || this.state.uiMode !== 'auto') {
+      return;
     }
+
+    var now = Number.isFinite(timestamp) ? timestamp : performance.now();
+
+    if (this.state.autoPhase === 'planning') {
+      if (!this.state.autoPlanWindowStartTs) {
+        this.state.autoPlanWindowStartTs = now;
+        this.state.autoAcceptedAtWindowStart = this.state.accepted;
+      }
+      var planningDeadline = this.state.autoPlanWindowStartTs + this.state.autoPlanWindowMs;
+      var sliceEnd = Math.min(performance.now() + this.autoPlanningSliceMs, planningDeadline);
+      while (performance.now() < sliceEnd) {
+        var ok = this.plannerStep();
+        if (!ok) {
+          break;
+        }
+      }
+
+      var planningWindowDone = performance.now() >= planningDeadline;
+      if (planningWindowDone) {
+        var acceptedDelta = this.state.accepted - this.state.autoAcceptedAtWindowStart;
+        if (!this.canExecuteCurrentPlan()) {
+          if (acceptedDelta <= 0) {
+            this.state.autoStallCycles += 1;
+          } else {
+            this.state.autoStallCycles = 0;
+          }
+          if (this.state.autoStallCycles >= this.state.autoStallLimit) {
+            this.stopAutoCycle('Stopped: planner stalled without finding an executable step.');
+            this.render();
+            return;
+          }
+          if (this.state.samples >= this.state.maxSamples) {
+            this.stopAutoCycle('Stopped: max samples reached with no valid execute step.');
+            this.render();
+            return;
+          }
+          this.state.autoPlanWindowStartTs = now;
+          this.state.autoAcceptedAtWindowStart = this.state.accepted;
+        } else {
+          this.state.autoStallCycles = 0;
+          this.state.autoPhase = 'executing';
+          this.state.autoExecuteStartTs = now;
+        }
+      }
+    } else {
+      if (!this.canExecuteCurrentPlan()) {
+        this.state.autoPhase = 'planning';
+        this.state.autoPlanWindowStartTs = now;
+        this.state.autoAcceptedAtWindowStart = this.state.accepted;
+      } else {
+        if (!this.state.autoExecuteStartTs) {
+          this.state.autoExecuteStartTs = now;
+        }
+        if (now - this.state.autoExecuteStartTs >= this.state.autoExecuteDelayMs) {
+          this.replanTreeStep();
+          this.state.autoCycleCount += 1;
+
+          if (this.state.budget <= 1e-6 || this.state.effectiveHorizon <= 1e-6) {
+            this.stopAutoCycle('Stopped: remaining budget/horizon exhausted.');
+            this.render();
+            return;
+          }
+
+          this.state.autoPhase = 'planning';
+          this.state.autoPlanWindowStartTs = now;
+          this.state.autoExecuteStartTs = 0;
+          this.state.autoAcceptedAtWindowStart = this.state.accepted;
+        }
+      }
+    }
+
+    this.render();
+
+    var self = this;
+    this.rafId = requestAnimationFrame(function (ts) {
+      self.autoTick(ts);
+    });
+  };
+
+  PlannerDemo.prototype.reset = function () {
+    this.stopLoops('');
 
     var scenarioKey = this.controls.scenario.value || 'fixedWing';
     var scenario = this.scenarios[scenarioKey];
@@ -745,7 +933,19 @@
       edgeGainTotal: 0,
       replanCount: 0,
       executedCost: 0,
-      plannedSinceRecycle: false
+      plannedSinceRecycle: false,
+      uiMode: this.uiMode,
+      autoRunning: false,
+      autoPhase: 'planning',
+      autoCycleCount: 0,
+      autoPlanWindowMs: Number(this.controls.autoPlanWindow.value) * 1000,
+      autoPlanWindowStartTs: 0,
+      autoExecuteDelayMs: Number(this.controls.autoExecDelay.value) * 1000,
+      autoExecuteStartTs: 0,
+      autoAcceptedAtWindowStart: 0,
+      autoStallCycles: 0,
+      autoStallLimit: 3,
+      autoStopReason: ''
     };
     this.state.effectiveHorizon = Math.min(this.state.budget, this.state.planningHorizon);
 
@@ -900,7 +1100,17 @@
     var s = this.state;
     var bestGain = s.best ? s.best.gain : 0;
     var bestCost = s.best ? s.best.cost : 0;
+    var modeSummary = s.uiMode === 'auto'
+      ? ('Mode: Auto ' + (s.autoRunning ? '(running)' : '(stopped)') + ' | Cycle: ' + s.autoCycleCount + ' | Phase: ' + s.autoPhase)
+      : 'Mode: Manual';
+
+    if (this.controls.modeChip) {
+      this.controls.modeChip.textContent = modeSummary;
+    }
+
     this.statusEl.textContent =
+      modeSummary +
+      ' | ' +
       'Samples: ' + s.samples + ' / ' + s.maxSamples +
       ' | Accepted: ' + s.accepted +
       ' | Rejected: ' + s.rejected +
@@ -930,6 +1140,17 @@
       hint: document.getElementById('demo-workflow-hint'),
       controls: {
         scenario: document.getElementById('demo-scenario'),
+        modeChip: document.getElementById('demo-mode-chip'),
+        modeManual: document.getElementById('demo-mode-manual'),
+        modeAuto: document.getElementById('demo-mode-auto'),
+        manualActions: document.getElementById('demo-manual-actions'),
+        autoControls: document.getElementById('demo-auto-controls'),
+        autoStart: document.getElementById('demo-auto-start'),
+        autoStop: document.getElementById('demo-auto-stop'),
+        autoPlanWindow: document.getElementById('demo-auto-plan-window'),
+        autoPlanWindowValue: document.getElementById('demo-auto-plan-window-value'),
+        autoExecDelay: document.getElementById('demo-auto-exec-delay'),
+        autoExecDelayValue: document.getElementById('demo-auto-exec-delay-value'),
         budget: document.getElementById('demo-budget'),
         budgetValue: document.getElementById('demo-budget-value'),
         planningHorizon: document.getElementById('demo-planning-horizon'),
@@ -956,7 +1177,10 @@
 
   window.initPlannerDemo = function () {
     var root = getRootElements();
-    if (!root.canvas || !root.status || !root.hint || !root.controls.scenario) {
+    if (!root.canvas || !root.status || !root.hint || !root.controls.scenario ||
+      !root.controls.modeManual || !root.controls.modeAuto ||
+      !root.controls.autoStart || !root.controls.autoStop ||
+      !root.controls.autoPlanWindow || !root.controls.autoExecDelay) {
       return;
     }
 
