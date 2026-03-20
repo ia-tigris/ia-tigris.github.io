@@ -348,6 +348,11 @@ body {
   margin-top: 0.35rem;
 }
 
+.planner-demo-advanced-slider {
+  margin-top: 0.4rem;
+  max-width: 360px;
+}
+
 @media screen and (max-width: 1280px) {
   .planner-demo-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

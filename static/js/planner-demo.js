@@ -122,6 +122,9 @@
     this.uiMode = 'manual';
     this.manualSamplesPerFrame = 100;
     this.autoPlanningSliceMs = 10;
+    this.autoPlanningSliceMovingMs = 4;
+    this.autoRenderEveryN = 25;
+    this.minMoveDurationMs = 180;
     this.running = false;
     this.rafId = null;
 
@@ -312,9 +315,10 @@
       this.state.uiMode = nextMode;
       this.state.autoPhase = 'planning';
       this.state.autoPlanWindowStartTs = 0;
-      this.state.autoExecuteStartTs = 0;
       this.state.autoStopReason = '';
       this.state.autoStallCycles = 0;
+      this.state.moveActive = false;
+      this.state.pendingRecycleTs = 0;
     }
     this.render();
   };
@@ -353,6 +357,128 @@
     this.state.autoAcceptedAtWindowStart = this.state.accepted;
   };
 
+  PlannerDemo.prototype.startMoveSegment = function (now) {
+    var nextNode = null;
+    if (this.state.bestPath && this.state.bestPath.length > 1) {
+      nextNode = this.state.bestPath[1];
+    }
+    if (!nextNode) {
+      return false;
+    }
+
+    var startPose = {
+      x: this.state.root.x,
+      y: this.state.root.y
+    };
+    var targetPose = {
+      x: nextNode.x,
+      y: nextNode.y
+    };
+    var segmentLength = dist(startPose, targetPose);
+    if (segmentLength < 1e-6) {
+      return false;
+    }
+
+    var speed = Math.max(1e-3, this.state.autoRobotSpeed);
+    var moveDurationMs = Math.max(this.minMoveDurationMs, (segmentLength / speed) * 1000);
+
+    this.state.moveActive = true;
+    this.state.moveStartTs = now;
+    this.state.moveDurationMs = moveDurationMs;
+    this.state.moveStartPose = startPose;
+    this.state.moveTargetPose = targetPose;
+    this.state.moveExecuteNode = nextNode;
+    this.state.displayPose = {
+      x: startPose.x,
+      y: startPose.y
+    };
+    this.state.autoPhase = 'moving';
+    return true;
+  };
+
+  PlannerDemo.prototype.updateMoveState = function (now) {
+    if (!this.state.moveActive) {
+      return false;
+    }
+
+    var duration = Math.max(1, this.state.moveDurationMs);
+    var t = clamp((now - this.state.moveStartTs) / duration, 0, 1);
+    var startPose = this.state.moveStartPose;
+    var targetPose = this.state.moveTargetPose;
+
+    this.state.displayPose = {
+      x: startPose.x + (targetPose.x - startPose.x) * t,
+      y: startPose.y + (targetPose.y - startPose.y) * t
+    };
+
+    if (t < 1) {
+      return false;
+    }
+
+    this.state.moveActive = false;
+    if (this.state.autoExecuteDelayMs > 0) {
+      this.state.pendingRecycleTs = now + this.state.autoExecuteDelayMs;
+    } else {
+      this.state.pendingRecycleTs = now;
+    }
+    return true;
+  };
+
+  PlannerDemo.prototype.executeRecycleToNode = function (nextRoot) {
+    if (!nextRoot) {
+      return false;
+    }
+
+    var oldRootCost = nextRoot.cost;
+    var oldRootGain = nextRoot.gain;
+    var remainingBudget = Math.max(0, this.state.budget - oldRootCost);
+
+    var kept = [];
+    for (var i = 0; i < this.state.nodes.length; i++) {
+      var node = this.state.nodes[i];
+      if (isDescendantOf(node, nextRoot)) {
+        kept.push(node);
+      }
+    }
+
+    if (kept.length === 0) {
+      return false;
+    }
+
+    nextRoot.parent = null;
+
+    for (var k = 0; k < kept.length; k++) {
+      var n = kept[k];
+      n.cost = Math.max(0, n.cost - oldRootCost);
+      n.gain = Math.max(0, n.gain - oldRootGain);
+    }
+
+    this.state.nodes = kept;
+    this.state.root = nextRoot;
+    this.state.displayPose = { x: nextRoot.x, y: nextRoot.y };
+    this.state.budget = remainingBudget;
+    this.state.effectiveHorizon = Math.min(this.state.budget, this.state.planningHorizon);
+    this.state.closedNodeIds = new Set();
+    this.state.samples = 0;
+    this.state.accepted = 0;
+    this.state.rejected = 0;
+    this.state.pruned = 0;
+    this.state.plannedSinceRecycle = false;
+    this.state.replanCount += 1;
+    this.state.executedCost += oldRootCost;
+    this.state.pendingRecycleTs = 0;
+
+    var best = kept[0];
+    for (var j = 1; j < kept.length; j++) {
+      if (kept[j].gain > best.gain) {
+        best = kept[j];
+      }
+    }
+    this.state.best = best;
+    this.state.bestPath = this.nodePath(best);
+    return true;
+  };
+
   PlannerDemo.prototype.startAutoCycle = function () {
     if (!this.state || this.state.uiMode !== 'auto') {
       return;
@@ -361,11 +487,16 @@
     this.state.autoRunning = true;
     this.state.autoPhase = 'planning';
     this.state.autoPlanWindowStartTs = 0;
-    this.state.autoExecuteStartTs = 0;
     this.state.autoStallCycles = 0;
     this.state.autoStopReason = '';
+    this.state.autoPlanStepCounter = 0;
     this.state.autoComputedPlanWindowMs = this.state.autoInitialMinPlanWindowMs;
     this.state.autoLastSegmentLength = 0;
+    this.state.moveActive = false;
+    this.state.moveExecuteNode = null;
+    this.state.pendingRecycleTs = 0;
+    this.state.displayPose = { x: this.state.root.x, y: this.state.root.y };
+    this.render();
     this.autoTick();
   };
 
@@ -773,55 +904,7 @@
     }
 
     var nextRoot = this.state.bestPath.length > 1 ? this.state.bestPath[1] : this.state.bestPath[0];
-    if (!nextRoot) {
-      return;
-    }
-
-    var oldRootCost = nextRoot.cost;
-    var oldRootGain = nextRoot.gain;
-    var remainingBudget = Math.max(0, this.state.budget - oldRootCost);
-
-    var kept = [];
-    for (var i = 0; i < this.state.nodes.length; i++) {
-      var node = this.state.nodes[i];
-      if (isDescendantOf(node, nextRoot)) {
-        kept.push(node);
-      }
-    }
-
-    if (kept.length === 0) {
-      return;
-    }
-
-    nextRoot.parent = null;
-
-    for (var k = 0; k < kept.length; k++) {
-      var n = kept[k];
-      n.cost = Math.max(0, n.cost - oldRootCost);
-      n.gain = Math.max(0, n.gain - oldRootGain);
-    }
-
-    this.state.nodes = kept;
-    this.state.root = nextRoot;
-    this.state.budget = remainingBudget;
-    this.state.effectiveHorizon = Math.min(this.state.budget, this.state.planningHorizon);
-    this.state.closedNodeIds = new Set();
-    this.state.samples = 0;
-    this.state.accepted = 0;
-    this.state.rejected = 0;
-    this.state.pruned = 0;
-    this.state.plannedSinceRecycle = false;
-    this.state.replanCount += 1;
-    this.state.executedCost += oldRootCost;
-
-    var best = kept[0];
-    for (var j = 1; j < kept.length; j++) {
-      if (kept[j].gain > best.gain) {
-        best = kept[j];
-      }
-    }
-    this.state.best = best;
-    this.state.bestPath = this.nodePath(best);
+    this.executeRecycleToNode(nextRoot);
   };
 
   PlannerDemo.prototype.stepMany = function (count) {
@@ -859,72 +942,88 @@
     }
 
     var now = Number.isFinite(timestamp) ? timestamp : performance.now();
+    var shouldRender = false;
 
-    if (this.state.autoPhase === 'planning') {
-      if (!this.state.autoPlanWindowStartTs) {
-        this.startPlanningPhaseWindow(now);
+    this.updateMoveState(now);
+    if (this.state.moveActive) {
+      // Keep robot motion visually smooth even when tree updates are batched.
+      shouldRender = true;
+    }
+    if (this.state.pendingRecycleTs && now >= this.state.pendingRecycleTs) {
+      if (!this.executeRecycleToNode(this.state.moveExecuteNode)) {
+        this.stopAutoCycle('Stopped: failed to recycle moved segment.');
+        this.render();
+        return;
       }
-      var planningDeadline = this.state.autoPlanWindowStartTs + this.state.autoComputedPlanWindowMs;
-      var sliceEnd = Math.min(performance.now() + this.autoPlanningSliceMs, planningDeadline);
-      while (performance.now() < sliceEnd) {
-        var ok = this.plannerStep();
-        if (!ok) {
-          break;
-        }
+      this.state.autoCycleCount += 1;
+      this.state.moveExecuteNode = null;
+      this.state.autoPhase = 'planning';
+      this.state.autoPlanWindowStartTs = 0;
+
+      if (this.state.budget <= 1e-6 || this.state.effectiveHorizon <= 1e-6) {
+        this.stopAutoCycle('Stopped: remaining budget/horizon exhausted.');
+        this.render();
+        return;
       }
+      shouldRender = true;
+    }
 
-      var planningWindowDone = performance.now() >= planningDeadline;
-      if (planningWindowDone) {
-        var acceptedDelta = this.state.accepted - this.state.autoAcceptedAtWindowStart;
-        if (!this.canExecuteCurrentPlan()) {
-          if (acceptedDelta <= 0) {
-            this.state.autoStallCycles += 1;
-          } else {
-            this.state.autoStallCycles = 0;
-          }
-          if (this.state.autoStallCycles >= this.state.autoStallLimit) {
-            this.stopAutoCycle('Stopped: planner stalled without finding an executable step.');
-            this.render();
-            return;
-          }
-          if (this.state.samples >= this.state.maxSamples) {
-            this.stopAutoCycle('Stopped: max samples reached with no valid execute step.');
-            this.render();
-            return;
-          }
-          this.startPlanningPhaseWindow(now);
-        } else {
-          this.state.autoStallCycles = 0;
-          this.state.autoPhase = 'executing';
-          this.state.autoExecuteStartTs = now;
-        }
-      }
-    } else {
-      if (!this.canExecuteCurrentPlan()) {
-        this.state.autoPhase = 'planning';
-        this.startPlanningPhaseWindow(now);
-      } else {
-        if (!this.state.autoExecuteStartTs) {
-          this.state.autoExecuteStartTs = now;
-        }
-        if (now - this.state.autoExecuteStartTs >= this.state.autoExecuteDelayMs) {
-          this.replanTreeStep();
-          this.state.autoCycleCount += 1;
-
-          if (this.state.budget <= 1e-6 || this.state.effectiveHorizon <= 1e-6) {
-            this.stopAutoCycle('Stopped: remaining budget/horizon exhausted.');
-            this.render();
-            return;
-          }
-
-          this.state.autoPhase = 'planning';
-          this.state.autoPlanWindowStartTs = 0;
-          this.state.autoExecuteStartTs = 0;
-        }
+    if (!this.state.moveActive && !this.state.pendingRecycleTs && this.canExecuteCurrentPlan()) {
+      if (this.startMoveSegment(now)) {
+        shouldRender = true;
       }
     }
 
-    this.render();
+    if (!this.state.autoPlanWindowStartTs) {
+      this.startPlanningPhaseWindow(now);
+    }
+
+    var planningDeadline = this.state.autoPlanWindowStartTs + this.state.autoComputedPlanWindowMs;
+    var planningSliceMs = this.state.moveActive ? this.autoPlanningSliceMovingMs : this.autoPlanningSliceMs;
+    var sliceEnd = Math.min(performance.now() + planningSliceMs, planningDeadline);
+    var stepsThisTick = 0;
+    while (performance.now() < sliceEnd) {
+      var ok = this.plannerStep();
+      stepsThisTick += 1;
+      this.state.autoPlanStepCounter += 1;
+      if (!ok) {
+        break;
+      }
+    }
+
+    var planningWindowDone = performance.now() >= planningDeadline;
+    if (planningWindowDone) {
+      var acceptedDelta = this.state.accepted - this.state.autoAcceptedAtWindowStart;
+      if (!this.canExecuteCurrentPlan()) {
+        if (acceptedDelta <= 0) {
+          this.state.autoStallCycles += 1;
+        } else {
+          this.state.autoStallCycles = 0;
+        }
+        if (this.state.autoStallCycles >= this.state.autoStallLimit) {
+          this.stopAutoCycle('Stopped: planner stalled without finding an executable step.');
+          this.render();
+          return;
+        }
+        if (this.state.samples >= this.state.maxSamples) {
+          this.stopAutoCycle('Stopped: max samples reached with no valid execute step.');
+          this.render();
+          return;
+        }
+        this.startPlanningPhaseWindow(now);
+      } else {
+        this.state.autoStallCycles = 0;
+        this.startPlanningPhaseWindow(now);
+      }
+    }
+
+    if (stepsThisTick > 0 && this.state.autoPlanStepCounter % this.autoRenderEveryN === 0) {
+      shouldRender = true;
+    }
+
+    if (shouldRender) {
+      this.render();
+    }
 
     var self = this;
     this.rafId = requestAnimationFrame(function (ts) {
@@ -984,6 +1083,7 @@
       autoRunning: false,
       autoPhase: 'planning',
       autoCycleCount: 0,
+      autoPlanStepCounter: 0,
       autoRobotSpeed: Number(this.controls.autoSpeed.value),
       autoMaxPlanWindowMs: Number(this.controls.autoMaxPlanTime.value) * 1000,
       autoInitialMinPlanWindowMs: 2000,
@@ -993,11 +1093,18 @@
       autoLastSegmentLength: 0,
       autoPlanWindowStartTs: 0,
       autoExecuteDelayMs: Number(this.controls.autoExecDelay.value) * 1000,
-      autoExecuteStartTs: 0,
       autoAcceptedAtWindowStart: 0,
       autoStallCycles: 0,
       autoStallLimit: 3,
-      autoStopReason: ''
+      autoStopReason: '',
+      moveActive: false,
+      moveStartTs: 0,
+      moveDurationMs: 0,
+      moveStartPose: { x: scenario.start.x, y: scenario.start.y },
+      moveTargetPose: { x: scenario.start.x, y: scenario.start.y },
+      moveExecuteNode: null,
+      pendingRecycleTs: 0,
+      displayPose: { x: scenario.start.x, y: scenario.start.y }
     };
     this.state.effectiveHorizon = Math.min(this.state.budget, this.state.planningHorizon);
 
@@ -1103,7 +1210,8 @@
     }
     ctx.stroke();
 
-    var start = toCanvas(this.state.root);
+    var poseNode = this.state.displayPose || this.state.root;
+    var start = toCanvas(poseNode);
     ctx.beginPath();
     ctx.arc(start.x, start.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = '#20c8d8';
@@ -1155,7 +1263,7 @@
     var budgetDistance = s.budget / COST_PER_GRID_UNIT;
     var executedDistance = s.executedCost / COST_PER_GRID_UNIT;
     var modeSummary = s.uiMode === 'auto'
-      ? ('Mode: Auto ' + (s.autoRunning ? '(running)' : '(stopped)') + ' | Cycle: ' + s.autoCycleCount + ' | Phase: ' + s.autoPhase)
+      ? ('Mode: Auto ' + (s.autoRunning ? '(running)' : '(stopped)') + ' | Cycle: ' + s.autoCycleCount + ' | Phase: ' + (s.moveActive ? 'moving' : 'planning'))
       : 'Mode: Manual';
     var autoDetail = '';
     if (s.uiMode === 'auto') {
