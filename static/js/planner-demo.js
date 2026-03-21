@@ -63,43 +63,70 @@
     }
 
     return {
-      fixedWing: {
-        label: 'Fixed-wing Search',
+      wideAreaCoverage: {
+        label: 'Wide-Area Coverage',
         polygon: scale([
           [0.06, 0.10], [0.88, 0.06], [0.95, 0.34], [0.90, 0.82], [0.24, 0.92], [0.07, 0.64]
         ]),
         start: { x: 0.16 * gridW, y: 0.20 * gridH },
         footprint: 3.2,
-        obsStrength: 0.21,
+        obsStrength: 0.51,
         priors: [
           { x: 0.73 * gridW, y: 0.63 * gridH, sigma: 5.0, gain: 0.72, priority: 2.1 },
           { x: 0.47 * gridW, y: 0.40 * gridH, sigma: 4.4, gain: 0.58, priority: 1.8 }
         ]
       },
-      urbanCorridor: {
-        label: 'Urban Corridor',
+      corridorBottleneck: {
+        label: 'Corridor Bottleneck',
         polygon: scale([
-          [0.08, 0.18], [0.84, 0.12], [0.93, 0.28], [0.84, 0.52], [0.92, 0.74], [0.82, 0.90], [0.18, 0.86], [0.10, 0.62], [0.20, 0.43]
+          [0.08, 0.58], [0.24, 0.56], [0.40, 0.53], [0.58, 0.51], [0.68, 0.48], [0.72, 0.40], [0.78, 0.30],
+          [0.90, 0.26], [0.95, 0.36], [0.95, 0.76], [0.80, 0.84], [0.66, 0.76], [0.58, 0.67], [0.42, 0.66],
+          [0.24, 0.66], [0.10, 0.72]
         ]),
-        start: { x: 0.20 * gridW, y: 0.24 * gridH },
-        footprint: 2.7,
-        obsStrength: 0.24,
+        start: { x: 0.12 * gridW, y: 0.64 * gridH },
+        footprint: 2.6,
+        obsStrength: 0.40,
         priors: [
-          { x: 0.72 * gridW, y: 0.28 * gridH, sigma: 3.4, gain: 0.61, priority: 2.0 },
-          { x: 0.58 * gridW, y: 0.68 * gridH, sigma: 4.3, gain: 0.66, priority: 2.2 }
+          { x: 0.86 * gridW, y: 0.62 * gridH, sigma: 3.2, gain: 0.78, priority: 2.6 },
+          { x: 0.50 * gridW, y: 0.58 * gridH, sigma: 2.6, gain: 0.40, priority: 1.3 }
         ]
       },
-      coastalSweep: {
-        label: 'Coastal Sweep',
+      popUpEventReplan: {
+        label: 'Pop-Up Event Replan',
         polygon: scale([
-          [0.06, 0.18], [0.82, 0.12], [0.94, 0.34], [0.90, 0.56], [0.96, 0.86], [0.20, 0.92], [0.10, 0.74]
+          [0.08, 0.16], [0.86, 0.11], [0.94, 0.34], [0.90, 0.84], [0.18, 0.90], [0.09, 0.64]
         ]),
-        start: { x: 0.18 * gridW, y: 0.26 * gridH },
-        footprint: 3.5,
-        obsStrength: 0.18,
+        start: { x: 0.16 * gridW, y: 0.24 * gridH },
+        footprint: 3.0,
+        obsStrength: 0.51,
         priors: [
-          { x: 0.77 * gridW, y: 0.74 * gridH, sigma: 5.5, gain: 0.70, priority: 2.3 },
-          { x: 0.50 * gridW, y: 0.49 * gridH, sigma: 3.8, gain: 0.55, priority: 1.7 }
+          { x: 0.32 * gridW, y: 0.46 * gridH, sigma: 4.1, gain: 0.68, priority: 2.0 },
+          { x: 0.46 * gridW, y: 0.34 * gridH, sigma: 3.3, gain: 0.50, priority: 1.6 }
+        ],
+        eventTrigger: {
+          type: 'recycles',
+          count: 3
+        },
+        eventMode: 'replace',
+        eventPriors: [
+          { x: 0.80 * gridW, y: 0.70 * gridH, sigma: 3.7, gain: 0.86, priority: 2.8 },
+          { x: 0.68 * gridW, y: 0.46 * gridH, sigma: 2.9, gain: 0.56, priority: 1.9 }
+        ],
+        eventLabelSuffix: 'Event active'
+      },
+      multiClusterHorizon: {
+        label: 'Multi-Cluster Horizon',
+        polygon: scale([
+          [0.08, 0.16], [0.86, 0.10], [0.94, 0.32], [0.90, 0.84], [0.20, 0.92], [0.10, 0.70]
+        ]),
+        start: { x: 0.14 * gridW, y: 0.26 * gridH },
+        footprint: 2.9,
+        obsStrength: 0.50,
+        priors: [
+          { x: 0.36 * gridW, y: 0.30 * gridH, sigma: 1.6, gain: 0.58, priority: 2.0 },
+          { x: 0.54 * gridW, y: 0.56 * gridH, sigma: 2.1, gain: 0.62, priority: 2.2 },
+          { x: 0.72 * gridW, y: 0.32 * gridH, sigma: 1.5, gain: 0.64, priority: 2.3 },
+          { x: 0.82 * gridW, y: 0.68 * gridH, sigma: 2.2, gain: 0.60, priority: 2.1 }
         ]
       }
     };
@@ -156,6 +183,8 @@
       c.budgetValue.textContent = c.budget.value;
       c.planningHorizonValue.textContent = c.planningHorizon.value;
       c.maxSamplesValue.textContent = c.maxSamples.value;
+      c.footprintValue.textContent = Number(c.footprint.value).toFixed(1);
+      c.obsStrengthValue.textContent = Number(c.obsStrength.value).toFixed(2);
       c.extendDistanceValue.textContent = Number(c.extendDistance.value).toFixed(1);
       c.extendRadiusValue.textContent = Number(c.extendRadius.value).toFixed(1);
       c.pruneRadiusValue.textContent = Number(c.pruneRadius.value).toFixed(1);
@@ -199,6 +228,16 @@
     });
 
     c.pruneRadius.addEventListener('input', function () {
+      updateSliderLabels();
+      self.reset();
+    });
+
+    c.footprint.addEventListener('input', function () {
+      updateSliderLabels();
+      self.reset();
+    });
+
+    c.obsStrength.addEventListener('input', function () {
       updateSliderLabels();
       self.reset();
     });
@@ -476,6 +515,7 @@
     }
     this.state.best = best;
     this.state.bestPath = this.nodePath(best);
+    this.applyScenarioEventIfTriggered();
     return true;
   };
 
@@ -553,7 +593,11 @@
     return seed;
   };
 
-  PlannerDemo.prototype.makeBaseMaps = function (scenario) {
+  PlannerDemo.prototype.makeBaseMaps = function (scenario, priorsOverride) {
+    var priors = scenario.priors;
+    if (Array.isArray(priorsOverride) && priorsOverride.length > 0) {
+      priors = priorsOverride;
+    }
     var baseMap = new Float32Array(this.cellCount);
     var priorityMap = new Float32Array(this.cellCount);
     var mask = new Uint8Array(this.cellCount);
@@ -575,8 +619,8 @@
         var uncertainty = 0.09;
         var priority = 1.0;
 
-        for (var p = 0; p < scenario.priors.length; p++) {
-          var prior = scenario.priors[p];
+        for (var p = 0; p < priors.length; p++) {
+          var prior = priors[p];
           var dx = cx - prior.x;
           var dy = cy - prior.y;
           var d2 = dx * dx + dy * dy;
@@ -595,6 +639,88 @@
       priorityMap: priorityMap,
       mask: mask
     };
+  };
+
+  PlannerDemo.prototype.recomputeTreeBeliefsAndGains = function () {
+    var nodes = this.state.nodes;
+    if (!nodes || nodes.length === 0) {
+      return;
+    }
+
+    var root = this.state.root;
+    root.parent = null;
+    root.cost = 0;
+    root.gain = 0;
+    root.edgeGain = 0;
+    root.vertexGain = 0;
+    root.map = this.state.baseMap.slice(0);
+
+    var edgeGainSum = 0;
+    for (var i = 1; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (!node.parent || !node.parent.map) {
+        continue;
+      }
+      var parent = node.parent;
+      var nextMap = parent.map.slice(0);
+      var edgeGain = 0;
+      if (this.state.includeEdge) {
+        edgeGain = this.applyEdgeObservation(nextMap, parent, node);
+      }
+      var vertexGain = this.applyObservation(nextMap, node, 1.0, 1.0);
+
+      node.edgeGain = edgeGain;
+      node.vertexGain = vertexGain;
+      node.map = nextMap;
+      node.cost = parent.cost + dist(parent, node) * COST_PER_GRID_UNIT;
+      node.gain = parent.gain + edgeGain + vertexGain;
+      edgeGainSum += edgeGain;
+    }
+
+    this.state.edgeGainTotal = edgeGainSum;
+    this.state.best = nodes[0];
+    for (var j = 1; j < nodes.length; j++) {
+      if (nodes[j].gain > this.state.best.gain) {
+        this.state.best = nodes[j];
+      }
+    }
+    this.state.bestPath = this.nodePath(this.state.best);
+  };
+
+  PlannerDemo.prototype.applyScenarioEventIfTriggered = function () {
+    var s = this.state;
+    var scenario = s.scenario;
+    if (!scenario || !scenario.eventTrigger || s.eventActive) {
+      return false;
+    }
+
+    var trigger = scenario.eventTrigger;
+    var threshold = Number(trigger.count);
+    if (!Number.isFinite(threshold)) {
+      threshold = 1;
+    }
+
+    var triggered = trigger.type === 'autoCycles'
+      ? s.autoCycleCount >= threshold
+      : s.replanCount >= threshold;
+    if (!triggered) {
+      return false;
+    }
+
+    var eventPriors = Array.isArray(scenario.eventPriors) ? scenario.eventPriors : scenario.priors;
+    var activePriors = scenario.eventMode === 'additive'
+      ? scenario.priors.concat(eventPriors)
+      : eventPriors.slice(0);
+
+    var maps = this.makeBaseMaps(scenario, activePriors);
+    s.activePriors = activePriors;
+    s.baseMap = maps.baseMap;
+    s.priorityMap = maps.priorityMap;
+    s.eventActive = true;
+    s.eventLabel = scenario.eventLabelSuffix || 'Event active';
+
+    this.recomputeTreeBeliefsAndGains();
+    return true;
   };
 
   PlannerDemo.prototype.samplePointInsideMask = function () {
@@ -1034,13 +1160,26 @@
   PlannerDemo.prototype.reset = function () {
     this.stopLoops('');
 
-    var scenarioKey = this.controls.scenario.value || 'fixedWing';
-    var scenario = this.scenarios[scenarioKey];
+    var scenarioKey = this.controls.scenario.value || 'wideAreaCoverage';
+    var baseScenario = this.scenarios[scenarioKey];
+    var scenario = {
+      label: baseScenario.label,
+      polygon: baseScenario.polygon,
+      start: baseScenario.start,
+      footprint: Number(this.controls.footprint.value),
+      obsStrength: Number(this.controls.obsStrength.value),
+      priors: baseScenario.priors,
+      eventTrigger: baseScenario.eventTrigger,
+      eventMode: baseScenario.eventMode,
+      eventPriors: baseScenario.eventPriors,
+      eventLabelSuffix: baseScenario.eventLabelSuffix
+    };
 
     this.seed = this.getSeed();
     this.rng = mulberry32(this.seed);
 
-    var maps = this.makeBaseMaps(scenario);
+    var activePriors = scenario.priors.slice(0);
+    var maps = this.makeBaseMaps(scenario, activePriors);
 
     var rootMap = maps.baseMap.slice(0);
     var rootNode = {
@@ -1055,9 +1194,13 @@
 
     this.state = {
       scenario: scenario,
+      scenarioKey: scenarioKey,
       mask: maps.mask,
       priorityMap: maps.priorityMap,
       baseMap: maps.baseMap,
+      activePriors: activePriors,
+      eventActive: false,
+      eventLabel: '',
       root: rootNode,
       nodes: [rootNode],
       best: rootNode,
@@ -1285,7 +1428,7 @@
       autoDetail =
         ' | Plan time window: ' + padFixed(s.autoComputedPlanWindowMs / 1000, 1, 4) + 's' +
         ' (segment ' + padFixed(s.autoLastSegmentLength, 2, 5) +
-        ' / speed ' + padFixed(s.autoRobotSpeed, 1, 3);
+        ' / speed ' + padFixed(s.autoRobotSpeed, 1, 3) + ')';
     }
     var eventDetail = s.eventActive ? (' | ' + (s.eventLabel || 'Event active')) : '';
 
@@ -1341,6 +1484,10 @@
         planningHorizonValue: document.getElementById('demo-planning-horizon-value'),
         maxSamples: document.getElementById('demo-max-samples'),
         maxSamplesValue: document.getElementById('demo-max-samples-value'),
+        footprint: document.getElementById('demo-footprint'),
+        footprintValue: document.getElementById('demo-footprint-value'),
+        obsStrength: document.getElementById('demo-obs-strength'),
+        obsStrengthValue: document.getElementById('demo-obs-strength-value'),
         extendDistance: document.getElementById('demo-extend-distance'),
         extendDistanceValue: document.getElementById('demo-extend-distance-value'),
         extendRadius: document.getElementById('demo-extend-radius'),
@@ -1365,7 +1512,8 @@
       !root.controls.modeManual || !root.controls.modeAuto ||
       !root.controls.autoStart || !root.controls.autoStop ||
       !root.controls.autoSpeed || !root.controls.autoMaxPlanTime ||
-      !root.controls.autoExecDelay) {
+      !root.controls.autoExecDelay ||
+      !root.controls.footprint || !root.controls.obsStrength) {
       return;
     }
 
