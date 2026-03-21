@@ -546,6 +546,8 @@
     var c = this.controls;
     var isAuto = this.state.uiMode === 'auto';
     var canExecute = this.canExecuteCurrentPlan();
+    var plannerExhausted = this.state.samples >= this.state.maxSamples;
+    var mustExecuteBeforeMorePlanning = plannerExhausted && canExecute;
     this.controls.replan.disabled = !canExecute;
 
     c.manualActions.classList.toggle('planner-demo-hidden', isAuto);
@@ -560,7 +562,17 @@
     c.autoStart.classList.toggle('is-light', this.state.autoRunning);
     c.autoStop.classList.toggle('is-danger', this.state.autoRunning);
     c.autoStop.classList.toggle('is-light', !this.state.autoRunning);
+    c.run.disabled = isAuto || mustExecuteBeforeMorePlanning;
     c.pause.disabled = isAuto;
+    c.run.classList.toggle('is-success', !this.running);
+    c.run.classList.toggle('is-link', false);
+    c.run.classList.toggle('is-light', this.running);
+    c.run.classList.toggle('planner-demo-manual-disabled', mustExecuteBeforeMorePlanning);
+    c.pause.classList.toggle('is-danger', this.running);
+    c.pause.classList.toggle('is-light', !this.running);
+    c.pause.classList.toggle('planner-demo-paused-out', !this.running && plannerExhausted);
+    c.replan.classList.toggle('planner-demo-cta-pulse', !isAuto && !this.running && plannerExhausted && canExecute);
+    c.step.disabled = isAuto || plannerExhausted;
 
     if (isAuto) {
       if (this.state.autoRunning) {
@@ -570,6 +582,11 @@
       } else {
         this.hintEl.textContent = 'Click "Start" to begin plan -> execute -> recycle cycles.';
       }
+      return;
+    }
+
+    if (this.running) {
+      this.hintEl.textContent = 'Planning... click "Pause" to inspect, or wait until a path is ready.';
       return;
     }
 
@@ -1046,6 +1063,7 @@
 
   PlannerDemo.prototype.tick = function () {
     if (!this.running || this.state.uiMode !== 'manual') {
+      this.rafId = null;
       return;
     }
 
@@ -1055,6 +1073,8 @@
     if (!stillHasBudget || this.state.samples >= this.state.maxSamples) {
       this.running = false;
       this.rafId = null;
+      // Render once more so buttons/hints reflect stopped-at-limit state immediately.
+      this.render();
       return;
     }
 
@@ -1066,6 +1086,7 @@
 
   PlannerDemo.prototype.autoTick = function (timestamp) {
     if (!this.state.autoRunning || this.state.uiMode !== 'auto') {
+      this.rafId = null;
       return;
     }
 

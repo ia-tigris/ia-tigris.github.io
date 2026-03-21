@@ -350,19 +350,13 @@
             </div>
 
             <div class="planner-demo-button-row">
-              <div id="demo-manual-actions" class="field is-grouped is-grouped-multiline planner-demo-buttons">
-                <p class="control">
-                  <button id="demo-run" class="button is-link is-small">Plan</button>
-                </p>
-                <p class="control">
-                  <button id="demo-pause" class="button is-light is-small">Pause</button>
-                </p>
-                <p class="control">
-                  <button id="demo-step" class="button is-light is-small">Plan Step</button>
-                </p>
-                <p class="control">
-                  <button id="demo-replan" class="button is-info is-small">Execute + Recycle</button>
-                </p>
+              <div id="demo-manual-actions" class="planner-demo-buttons">
+                <div class="buttons has-addons planner-demo-mode-toggle">
+                  <button id="demo-run" class="button is-link is-small" type="button">Plan</button>
+                  <button id="demo-pause" class="button is-light is-small" type="button">Pause</button>
+                </div>
+                <button id="demo-replan" class="button is-info is-small" type="button">Execute + Recycle</button>
+                <button id="demo-step" class="button is-light is-small" type="button">Plan One Step</button>
               </div>
 
               <div id="demo-auto-controls" class="planner-demo-auto-controls">

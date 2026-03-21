@@ -224,6 +224,10 @@ body {
 }
 
 .planner-demo-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
   margin-bottom: 0 !important;
 }
 
@@ -260,11 +264,44 @@ body {
   margin: 0 !important;
 }
 
+.planner-demo-mode-toggle .button.planner-demo-paused-out {
+  background-color: #eef1f5 !important;
+  border-color: #d1d7e0 !important;
+  color: #7a8796 !important;
+}
+
+.planner-demo-mode-toggle .button.planner-demo-manual-disabled {
+  background-color: #eef1f5 !important;
+  border-color: #d1d7e0 !important;
+  color: #7a8796 !important;
+}
+
 .planner-demo-button-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+#demo-manual-actions > #demo-replan {
+  margin-left: 0.35rem;
+}
+
+.planner-demo-cta-pulse {
+  animation: planner-demo-pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(32, 150, 243, 0.35);
+}
+
+@keyframes planner-demo-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(32, 150, 243, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(32, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(32, 150, 243, 0);
+  }
 }
 
 .planner-demo-auto-controls {
