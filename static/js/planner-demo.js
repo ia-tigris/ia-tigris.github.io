@@ -558,15 +558,19 @@
     c.modeAuto.classList.toggle('is-light', !isAuto);
     c.autoStart.disabled = !isAuto || this.state.autoRunning;
     c.autoStop.disabled = !isAuto || !this.state.autoRunning;
+    c.autoStart.classList.toggle('is-success', !this.state.autoRunning);
+    c.autoStart.classList.toggle('is-light', this.state.autoRunning);
+    c.autoStop.classList.toggle('is-danger', this.state.autoRunning);
+    c.autoStop.classList.toggle('is-light', !this.state.autoRunning);
     c.pause.disabled = isAuto;
 
     if (isAuto) {
       if (this.state.autoRunning) {
-        this.hintEl.textContent = 'Auto cycling... click "Stop Auto" to pause.';
+        this.hintEl.textContent = 'Auto cycling... click "Stop" to pause.';
       } else if (this.state.autoStopReason) {
         this.hintEl.textContent = this.state.autoStopReason;
       } else {
-        this.hintEl.textContent = 'Click "Start Auto" to begin plan -> execute -> recycle cycles.';
+        this.hintEl.textContent = 'Click "Start" to begin plan -> execute -> recycle cycles.';
       }
       return;
     }
@@ -1421,7 +1425,7 @@
     var budgetStr = padFixed(s.budget, 1, 5);
     var budgetDistanceStr = padFixed(budgetDistance, 1, 4);
     var modeSummary = s.uiMode === 'auto'
-      ? ('Mode: Auto ' + ' | Cycle: ' + padInt(s.autoCycleCount, 3))
+      ? ('Mode: Auto ' + ' | Cycle: ' + padInt(s.autoCycleCount, 3) + ' | Auto: ' + (s.autoRunning ? 'Running' : 'Idle'))
       : 'Mode: Manual';
     var autoDetail = '';
     if (s.uiMode === 'auto') {
