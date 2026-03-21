@@ -1,8 +1,6 @@
 (function () {
   'use strict';
 
-  var COST_PER_GRID_UNIT = 5.3;
-
   function mulberry32(seed) {
     var t = seed >>> 0;
     return function () {
@@ -676,7 +674,7 @@
       node.edgeGain = edgeGain;
       node.vertexGain = vertexGain;
       node.map = nextMap;
-      node.cost = parent.cost + dist(parent, node) * COST_PER_GRID_UNIT;
+      node.cost = parent.cost + dist(parent, node);
       node.gain = parent.gain + edgeGain + vertexGain;
       edgeGainSum += edgeGain;
     }
@@ -941,7 +939,7 @@
       x: parent.x + (dx / directDistance) * extend,
       y: parent.y + (dy / directDistance) * extend
     };
-    var edgeCost = extend * COST_PER_GRID_UNIT;
+    var edgeCost = extend;
 
     if (!this.isEdgeInsideMask(parent, newPoint)) {
       this.state.rejected += 1;
@@ -1412,7 +1410,6 @@
     var s = this.state;
     var bestGain = s.best ? s.best.gain : 0;
     var bestCost = s.best ? s.best.cost : 0;
-    var budgetDistance = s.budget / COST_PER_GRID_UNIT;
     var padInt = function (value, width) {
       return String(Math.max(0, Math.floor(value))).padStart(width, ' ');
     };
@@ -1428,7 +1425,6 @@
     var bestCostStr = padFixed(bestCost, 1, 5);
     var horizonStr = padFixed(s.effectiveHorizon, 1, 5);
     var budgetStr = padFixed(s.budget, 1, 5);
-    var budgetDistanceStr = padFixed(budgetDistance, 1, 4);
     var modeSummary = s.uiMode === 'auto'
       ? ('Mode: Auto ' + ' | Cycle: ' + padInt(s.autoCycleCount, 3) + ' | Auto: ' + (s.autoRunning ? 'Running' : 'Idle'))
       : 'Mode: Manual';
