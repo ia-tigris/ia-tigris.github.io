@@ -404,9 +404,11 @@ body {
 .planner-demo-status {
   margin-top: 0.75rem;
   font-family: "Google Sans", sans-serif;
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   line-height: 1.4;
   color: #24405f;
+  font-variant-numeric: tabular-nums;
+  white-space: pre-wrap;
 }
 
 .planner-demo-hint {

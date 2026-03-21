@@ -1261,39 +1261,50 @@
     var bestGain = s.best ? s.best.gain : 0;
     var bestCost = s.best ? s.best.cost : 0;
     var budgetDistance = s.budget / COST_PER_GRID_UNIT;
-    var executedDistance = s.executedCost / COST_PER_GRID_UNIT;
+    var padInt = function (value, width) {
+      return String(Math.max(0, Math.floor(value))).padStart(width, ' ');
+    };
+    var padFixed = function (value, decimals, width) {
+      return Number(value).toFixed(decimals).padStart(width, ' ');
+    };
+    var samplesStr = padInt(s.samples, 4) + ' / ' + padInt(s.maxSamples, 4);
+    var acceptedStr = padInt(s.accepted, 5);
+    var rejectedStr = padInt(s.rejected, 5);
+    var prunedStr = padInt(s.pruned, 5);
+    var closedStr = padInt(s.closedNodeIds.size, 4);
+    var bestGainStr = padFixed(bestGain, 2, 6);
+    var bestCostStr = padFixed(bestCost, 1, 5);
+    var horizonStr = padFixed(s.effectiveHorizon, 1, 5);
+    var budgetStr = padFixed(s.budget, 1, 5);
+    var budgetDistanceStr = padFixed(budgetDistance, 1, 4);
     var modeSummary = s.uiMode === 'auto'
-      ? ('Mode: Auto ' + (s.autoRunning ? '(running)' : '(stopped)') + ' | Cycle: ' + s.autoCycleCount + ' | Phase: ' + (s.moveActive ? 'moving' : 'planning'))
+      ? ('Mode: Auto ' + ' | Cycle: ' + padInt(s.autoCycleCount, 3))
       : 'Mode: Manual';
     var autoDetail = '';
     if (s.uiMode === 'auto') {
       autoDetail =
-        ' | Plan window: ' + (s.autoComputedPlanWindowMs / 1000).toFixed(1) + 's' +
-        ' (segment ' + s.autoLastSegmentLength.toFixed(2) +
-        ' / speed ' + s.autoRobotSpeed.toFixed(1) + ' grid units/s)';
+        ' | Plan time window: ' + padFixed(s.autoComputedPlanWindowMs / 1000, 1, 4) + 's' +
+        ' (segment ' + padFixed(s.autoLastSegmentLength, 2, 5) +
+        ' / speed ' + padFixed(s.autoRobotSpeed, 1, 3);
     }
+    var eventDetail = s.eventActive ? (' | ' + (s.eventLabel || 'Event active')) : '';
 
     if (this.controls.modeChip) {
-      this.controls.modeChip.textContent = modeSummary;
+      this.controls.modeChip.textContent = modeSummary + (s.eventActive ? ' | Event active' : '');
     }
 
     this.statusEl.textContent =
       modeSummary +
       ' | ' +
-      'Samples: ' + s.samples + ' / ' + s.maxSamples +
-      ' | Accepted: ' + s.accepted +
-      ' | Rejected: ' + s.rejected +
-      ' | Pruned: ' + s.pruned +
-      ' | Closed: ' + s.closedNodeIds.size +
-      ' | Recycles: ' + s.replanCount +
-      ' | Executed cost: ' + s.executedCost.toFixed(1) +
-      ' (~' + executedDistance.toFixed(1) + ' grid units)' +
-      ' | Edge gain: ' + s.edgeGainTotal.toFixed(2) +
-      ' | Best gain: ' + bestGain.toFixed(2) +
-      ' | Best cost: ' + bestCost.toFixed(1) + ' / ' + s.effectiveHorizon.toFixed(1) +
-      ' (budget ' + s.budget.toFixed(1) + ', ~' + budgetDistance.toFixed(1) + ' grid units)' +
+      'Samples: ' + samplesStr +
+      ' | Accepted: ' + acceptedStr +
+      ' | Rejected: ' + rejectedStr +
+      ' | Pruned: ' + prunedStr +
+      ' | Closed: ' + closedStr +
+      '\nBest gain: ' + bestGainStr +
+      ' | Best cost: ' + bestCostStr + ' / ' + horizonStr +
       autoDetail +
-      ' | Seed: ' + this.seed;
+      eventDetail;
   };
 
   PlannerDemo.prototype.render = function () {
