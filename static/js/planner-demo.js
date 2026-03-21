@@ -1155,6 +1155,11 @@
       this.render();
     }
 
+    if (!this.state.autoRunning || this.state.uiMode !== 'auto') {
+      this.rafId = null;
+      return;
+    }
+
     var self = this;
     this.rafId = requestAnimationFrame(function (ts) {
       self.autoTick(ts);

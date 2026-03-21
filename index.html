@@ -374,13 +374,7 @@
                   <div class="field planner-demo-card planner-demo-auto-slider">
                     <label class="label" for="demo-auto-speed">Robot Speed (grid units/s): <span id="demo-auto-speed-value">2.0</span></label>
                     <div class="control">
-                      <input id="demo-auto-speed" class="planner-slider" step="0.1" min="0.1" max="20.0" value="2.0" type="range">
-                    </div>
-                  </div>
-                  <div class="field planner-demo-card planner-demo-auto-slider">
-                    <label class="label" for="demo-auto-max-plan-time">Max Planning Time (s): <span id="demo-auto-max-plan-time-value">60.0</span></label>
-                    <div class="control">
-                      <input id="demo-auto-max-plan-time" class="planner-slider" step="0.5" min="1.0" max="120.0" value="60.0" type="range">
+                      <input id="demo-auto-speed" class="planner-slider" step="0.5" min="0.5" max="10.0" value="2.0" type="range">
                     </div>
                   </div>
                 </div>
@@ -413,6 +407,7 @@
                 include edge rewards
               </label>
             </div>
+          <div class="planner-demo-advanced-grid">
             <div class="field planner-demo-card planner-demo-advanced-slider">
             <label class="label" for="demo-footprint">Footprint: <span id="demo-footprint-value">3.0</span></label>
             <div class="control">
@@ -432,6 +427,12 @@
               </div>
             </div>
             <div class="field planner-demo-card planner-demo-advanced-slider">
+              <label class="label" for="demo-auto-max-plan-time">Max Planning Time (s): <span id="demo-auto-max-plan-time-value">60.0</span></label>
+              <div class="control">
+                <input id="demo-auto-max-plan-time" class="planner-slider" step="0.5" min="1.0" max="120.0" value="60.0" type="range">
+              </div>
+            </div>
+            <div class="field planner-demo-card planner-demo-advanced-slider">
             <label class="label" for="demo-extend-distance">Extend Distance: <span id="demo-extend-distance-value">3.0</span></label>
               <div class="control">
                 <input id="demo-extend-distance" class="planner-slider" step="0.2" min="0.8" max="8.0" value="3.0" type="range">
@@ -447,6 +448,7 @@
             <label class="label" for="demo-extend-radius">Extend Radius: <span id="demo-extend-radius-value">6.0</span></label>
               <div class="control">
                 <input id="demo-extend-radius" class="planner-slider" step="0.2" min="1.0" max="12.0" value="6.0" type="range">
+              </div>
               </div>
             </div>
           </details>

@@ -270,7 +270,7 @@ body {
 .planner-demo-auto-controls {
   display: none;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0.55rem;
   flex-wrap: wrap;
 }
@@ -281,13 +281,14 @@ body {
 
 .planner-demo-auto-slider-row {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0.55rem;
   flex-wrap: wrap;
+  margin-left: 0.75rem;
 }
 
 .planner-demo-auto-slider {
-  width: 220px;
+  width: 200px;
 }
 
 .planner-demo-reset-wrap {
@@ -346,9 +347,16 @@ body {
   margin-top: 0.35rem;
 }
 
+.planner-demo-advanced-grid {
+  margin-top: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 280px));
+  gap: 0.35rem 0.65rem;
+}
+
 .planner-demo-advanced-slider {
-  margin-top: 0.4rem;
-  max-width: 360px;
+  margin-top: 0;
+  max-width: 280px;
 }
 
 @media screen and (max-width: 1280px) {
@@ -377,8 +385,20 @@ body {
     align-items: flex-start;
   }
 
+  .planner-demo-auto-slider-row {
+    margin-left: 0;
+  }
+
   .planner-demo-auto-slider {
     width: 100%;
+  }
+
+  .planner-demo-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-demo-advanced-slider {
+    max-width: 100%;
   }
 
   .planner-demo-reset-wrap {
