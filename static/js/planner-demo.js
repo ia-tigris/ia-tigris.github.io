@@ -144,7 +144,7 @@
     this.hintEl = root.hint;
     this.controls = root.controls;
 
-    this.uiMode = 'manual';
+    this.uiMode = 'auto';
     this.manualSamplesPerFrame = 100;
     this.autoPlanningSliceMs = 10;
     this.autoPlanningSliceMovingMs = 4;
@@ -157,6 +157,8 @@
 
     this.wireControls();
     this.populateScenarioSelect();
+    this.applyScenarioDefaults(this.controls.scenario.value);
+    this.updateSliderLabels();
     this.reset();
   }
 
@@ -173,11 +175,8 @@
     scenarioSelect.value = keys[0];
   };
 
-  PlannerDemo.prototype.wireControls = function () {
-    var self = this;
+  PlannerDemo.prototype.updateSliderLabels = function () {
     var c = this.controls;
-
-    function updateSliderLabels() {
       c.budgetValue.textContent = c.budget.value;
       c.planningHorizonValue.textContent = c.planningHorizon.value;
       c.maxSamplesValue.textContent = c.maxSamples.value;
@@ -189,73 +188,124 @@
       c.autoSpeedValue.textContent = Number(c.autoSpeed.value).toFixed(1);
       c.autoMaxPlanTimeValue.textContent = Number(c.autoMaxPlanTime.value).toFixed(1);
       c.autoExecDelayValue.textContent = Number(c.autoExecDelay.value).toFixed(1);
+  };
+
+  PlannerDemo.prototype.applyScenarioDefaults = function (scenarioKey) {
+    var scenario = this.scenarios[scenarioKey];
+    if (!scenario || !scenario.defaults) {
+      return;
     }
 
+    var c = this.controls;
+    var d = scenario.defaults;
+
+    function clampToInput(control, value) {
+      var v = Number(value);
+      var lo = Number(control.min);
+      var hi = Number(control.max);
+      if (Number.isFinite(lo)) {
+        v = Math.max(lo, v);
+      }
+      if (Number.isFinite(hi)) {
+        v = Math.min(hi, v);
+      }
+      return v;
+    }
+
+    if (Number.isFinite(d.seed)) {
+      c.seed.value = String(Math.round(clampToInput(c.seed, d.seed)));
+    }
+    if (Number.isFinite(d.budget)) {
+      c.budget.value = String(Math.round(clampToInput(c.budget, d.budget)));
+    }
+    if (Number.isFinite(d.planningHorizon)) {
+      c.planningHorizon.value = String(Math.round(clampToInput(c.planningHorizon, d.planningHorizon)));
+    }
+    if (Number.isFinite(d.footprint)) {
+      c.footprint.value = String(clampToInput(c.footprint, d.footprint));
+    }
+    if (Number.isFinite(d.obsStrength)) {
+      c.obsStrength.value = String(clampToInput(c.obsStrength, d.obsStrength));
+    }
+  };
+
+  PlannerDemo.prototype.wireControls = function () {
+    var self = this;
+    var c = this.controls;
+
     c.scenario.addEventListener('change', function () {
+      self.applyScenarioDefaults(c.scenario.value);
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.budget.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.maxSamples.addEventListener('input', function () {
-      updateSliderLabels();
-      self.reset();
+      self.updateSliderLabels();
+      if (self.state) {
+        self.state.maxSamples = Number(c.maxSamples.value);
+        if (self.state.samples >= self.state.maxSamples && self.running && self.state.uiMode === 'manual') {
+          self.running = false;
+        }
+        self.render();
+      }
     });
 
     c.planningHorizon.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.seed.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.extendDistance.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.extendRadius.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.pruneRadius.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.footprint.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.obsStrength.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       self.reset();
     });
 
     c.autoSpeed.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       if (self.state) {
         self.state.autoRobotSpeed = Number(c.autoSpeed.value);
       }
     });
 
     c.autoMaxPlanTime.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       if (self.state) {
         self.state.autoMaxPlanWindowMs = Number(c.autoMaxPlanTime.value) * 1000;
       }
     });
 
     c.autoExecDelay.addEventListener('input', function () {
-      updateSliderLabels();
+      self.updateSliderLabels();
       if (self.state) {
         self.state.autoExecuteDelayMs = Number(c.autoExecDelay.value) * 1000;
       }
@@ -276,12 +326,24 @@
       if (self.state && self.state.uiMode !== 'manual') {
         return;
       }
+      if (self.state.samples >= self.state.maxSamples && self.canExecuteCurrentPlan()) {
+        return;
+      }
+      if (self.running) {
+        return;
+      }
       self.running = true;
       self.state.autoRunning = false;
       self.tick();
     });
 
     c.pause.addEventListener('click', function () {
+      if (self.state && self.state.uiMode !== 'manual') {
+        return;
+      }
+      if (!self.running) {
+        return;
+      }
       self.stopLoops('');
       self.render();
     });
@@ -325,7 +387,7 @@
       self.reset();
     });
 
-    updateSliderLabels();
+    this.updateSliderLabels();
   };
 
   PlannerDemo.prototype.stopLoops = function (autoReason) {
@@ -336,7 +398,7 @@
         this.state.autoStopReason = autoReason;
       }
     }
-    if (this.rafId) {
+    if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
