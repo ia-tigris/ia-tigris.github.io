@@ -292,12 +292,13 @@
   <div class="container is-max-desktop">
     <div class="columns is-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3 has-text-centered">Planner Demo</h2>
+        <h2 class="title is-3 has-text-centered">Simplified Planner Demo</h2>
         <p class="has-text-justified">
-          This interactive demo captures many of the core ideas behind IA-TIGRIS in a lightweight browser setting:
+          This interactive 2D demo captures many of the core ideas behind IA-TIGRIS in a lightweight browser setting:
           weighted sampling candidate states, estimating path-integrated information gain, tree-recycling, heuristic pruning, etc. 
+          It lacks many of the real-world constraints and complexities of the full planner, such as 3D field of view, motion constraints, real-time planning, etc.
           Fair warning, this was vibe-coded from the source code and paper and is not meant to be a polished demo, 
-          but we hope it can be a fun way to get a better intuition for how the planner works and the impact of different parameters.
+          but we hope it can be a interactive way to get a better intuition for how the planner works and the impact of different parameters.
         </p>
 
         <div class="planner-demo-controls">
@@ -389,33 +390,39 @@
           <canvas id="planner-demo-canvas" width="920" height="560"></canvas>
         </div>
         <div id="planner-demo-status" class="planner-demo-status"></div>
-          <details class="planner-demo-advanced">
-            <summary>Advanced Settings</summary>
-            <div class="planner-demo-toggles">
-              <label class="checkbox">
-                <input type="checkbox" id="demo-deterministic" checked>
-                deterministic reset
-              </label>
-              <label class="checkbox">
-                <input type="checkbox" id="demo-include-edge" checked>
-                include edge rewards
-              </label>
-            </div>
+        <details class="planner-demo-advanced">
+          <summary>Advanced Settings</summary>
+          <div class="planner-demo-toggles">
+            <label class="checkbox">
+              <input type="checkbox" id="demo-deterministic" checked>
+              deterministic reset
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" id="demo-include-edge" checked>
+              include edge rewards
+            </label>
+          </div>
           <div class="planner-demo-advanced-grid">
             <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-footprint">Footprint: <span id="demo-footprint-value">3.0</span></label>
-            <div class="control">
-              <input id="demo-footprint" class="planner-slider" step="0.1" min="1.0" max="6.0" value="3.0" type="range">
+              <label class="label" for="demo-footprint">Footprint: <span id="demo-footprint-value">3.0</span></label>
+              <div class="control">
+                <input id="demo-footprint" class="planner-slider" step="0.1" min="1.0" max="6.0" value="3.0" type="range">
+              </div>
             </div>
-          </div>
-          <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-obs-strength">Observation Update: <span id="demo-obs-strength-value">0.21</span></label>
-            <div class="control">
-              <input id="demo-obs-strength" class="planner-slider" step="0.01" min="0.05" max="0.50" value="0.21" type="range">
+            <div class="field planner-demo-card planner-demo-advanced-slider">
+              <label class="label" for="demo-obs-strength">Observation Update: <span id="demo-obs-strength-value">0.21</span></label>
+              <div class="control">
+                <input id="demo-obs-strength" class="planner-slider" step="0.01" min="0.05" max="0.50" value="0.21" type="range">
+              </div>
             </div>
-          </div>
-          <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-auto-exec-delay">Auto Execute Delay (s): <span id="demo-auto-exec-delay-value">0.0</span></label>
+            <div class="field planner-demo-card planner-demo-advanced-slider">
+              <label class="label" for="demo-auto-start-delay">Auto Start Delay (s): <span id="demo-auto-start-delay-value">2.0</span></label>
+              <div class="control">
+                <input id="demo-auto-start-delay" class="planner-slider" step="0.1" min="0.0" max="10.0" value="2.0" type="range">
+              </div>
+            </div>
+            <div class="field planner-demo-card planner-demo-advanced-slider">
+              <label class="label" for="demo-auto-exec-delay">Auto Execute Delay (s): <span id="demo-auto-exec-delay-value">0.0</span></label>
               <div class="control">
                 <input id="demo-auto-exec-delay" class="planner-slider" step="0.1" min="0.0" max="5.0" value="0.0" type="range">
               </div>
@@ -427,25 +434,25 @@
               </div>
             </div>
             <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-extend-distance">Extend Distance: <span id="demo-extend-distance-value">3.0</span></label>
+              <label class="label" for="demo-extend-distance">Extend Distance: <span id="demo-extend-distance-value">3.0</span></label>
               <div class="control">
                 <input id="demo-extend-distance" class="planner-slider" step="0.2" min="0.8" max="8.0" value="3.0" type="range">
               </div>
             </div>
             <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-prune-radius">Prune Radius: <span id="demo-prune-radius-value">2.4</span></label>
+              <label class="label" for="demo-prune-radius">Prune Radius: <span id="demo-prune-radius-value">2.4</span></label>
               <div class="control">
                 <input id="demo-prune-radius" class="planner-slider" step="0.2" min="0.8" max="8.0" value="2.4" type="range">
               </div>
             </div>
             <div class="field planner-demo-card planner-demo-advanced-slider">
-            <label class="label" for="demo-extend-radius">Extend Radius: <span id="demo-extend-radius-value">6.0</span></label>
+              <label class="label" for="demo-extend-radius">Extend Radius: <span id="demo-extend-radius-value">6.0</span></label>
               <div class="control">
-                <input id="demo-extend-radius" class="planner-slider" step="0.2" min="1.0" max="12.0" value="6.0" type="range">
-              </div>
+                <input id="demo-extend-radius" class="planner-slider" step="0.2" min="1.0" max="8.0" value="6.0" type="range">
               </div>
             </div>
-          </details>
+          </div>
+        </details>
       </div>
     </div>
   </div>

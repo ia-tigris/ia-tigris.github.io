@@ -68,7 +68,14 @@
         ]),
         start: { x: 0.16 * gridW, y: 0.20 * gridH },
         footprint: 3.2,
-        obsStrength: 0.51,
+        obsStrength: 0.21,
+        defaults: {
+          seed: 42,
+          budget: 50,
+          planningHorizon: 50,
+          footprint: 4.0,
+          obsStrength: 0.3
+        },
         priors: [
           { x: 0.73 * gridW, y: 0.63 * gridH, sigma: 5.0, gain: 0.72, priority: 2.1 },
           { x: 0.47 * gridW, y: 0.40 * gridH, sigma: 4.4, gain: 0.58, priority: 1.8 }
@@ -83,7 +90,14 @@
         ]),
         start: { x: 0.12 * gridW, y: 0.64 * gridH },
         footprint: 2.6,
-        obsStrength: 0.40,
+        obsStrength: 0.23,
+        defaults: {
+          seed: 77,
+          budget: 45,
+          planningHorizon: 45,
+          footprint: 3.0,
+          obsStrength: 0.3
+        },
         priors: [
           { x: 0.86 * gridW, y: 0.62 * gridH, sigma: 3.2, gain: 0.78, priority: 2.6 },
           { x: 0.50 * gridW, y: 0.58 * gridH, sigma: 2.6, gain: 0.40, priority: 1.3 }
@@ -96,7 +110,14 @@
         ]),
         start: { x: 0.16 * gridW, y: 0.24 * gridH },
         footprint: 3.0,
-        obsStrength: 0.51,
+        obsStrength: 0.21,
+        defaults: {
+          seed: 123,
+          budget: 50,
+          planningHorizon: 50,
+          footprint: 3.0,
+          obsStrength: 0.3
+        },
         priors: [
           { x: 0.32 * gridW, y: 0.46 * gridH, sigma: 4.1, gain: 0.68, priority: 2.0 },
           { x: 0.46 * gridW, y: 0.34 * gridH, sigma: 3.3, gain: 0.50, priority: 1.6 }
@@ -113,15 +134,22 @@
         eventLabelSuffix: 'Event active'
       },
       multiClusterHorizon: {
-        label: 'Multi-Cluster Horizon',
+        label: 'Multi-Cluster',
         polygon: scale([
           [0.08, 0.16], [0.86, 0.10], [0.94, 0.32], [0.90, 0.84], [0.20, 0.92], [0.10, 0.70]
         ]),
         start: { x: 0.14 * gridW, y: 0.26 * gridH },
         footprint: 2.9,
-        obsStrength: 0.50,
+        obsStrength: 0.20,
+        defaults: {
+          seed: 42,
+          budget: 56,
+          planningHorizon: 56,
+          footprint: 3.5,
+          obsStrength: 0.30
+        },
         priors: [
-          { x: 0.36 * gridW, y: 0.30 * gridH, sigma: 1.6, gain: 0.58, priority: 2.0 },
+          { x: 0.42 * gridW, y: 0.30 * gridH, sigma: 1.6, gain: 0.58, priority: 2.0 },
           { x: 0.54 * gridW, y: 0.56 * gridH, sigma: 2.1, gain: 0.62, priority: 2.2 },
           { x: 0.72 * gridW, y: 0.32 * gridH, sigma: 1.5, gain: 0.64, priority: 2.3 },
           { x: 0.82 * gridW, y: 0.68 * gridH, sigma: 2.2, gain: 0.60, priority: 2.1 }
@@ -177,17 +205,18 @@
 
   PlannerDemo.prototype.updateSliderLabels = function () {
     var c = this.controls;
-      c.budgetValue.textContent = c.budget.value;
-      c.planningHorizonValue.textContent = c.planningHorizon.value;
-      c.maxSamplesValue.textContent = c.maxSamples.value;
-      c.footprintValue.textContent = Number(c.footprint.value).toFixed(1);
-      c.obsStrengthValue.textContent = Number(c.obsStrength.value).toFixed(2);
-      c.extendDistanceValue.textContent = Number(c.extendDistance.value).toFixed(1);
-      c.extendRadiusValue.textContent = Number(c.extendRadius.value).toFixed(1);
-      c.pruneRadiusValue.textContent = Number(c.pruneRadius.value).toFixed(1);
-      c.autoSpeedValue.textContent = Number(c.autoSpeed.value).toFixed(1);
-      c.autoMaxPlanTimeValue.textContent = Number(c.autoMaxPlanTime.value).toFixed(1);
-      c.autoExecDelayValue.textContent = Number(c.autoExecDelay.value).toFixed(1);
+    c.budgetValue.textContent = c.budget.value;
+    c.planningHorizonValue.textContent = c.planningHorizon.value;
+    c.maxSamplesValue.textContent = c.maxSamples.value;
+    c.footprintValue.textContent = Number(c.footprint.value).toFixed(1);
+    c.obsStrengthValue.textContent = Number(c.obsStrength.value).toFixed(2);
+    c.extendDistanceValue.textContent = Number(c.extendDistance.value).toFixed(1);
+    c.extendRadiusValue.textContent = Number(c.extendRadius.value).toFixed(1);
+    c.pruneRadiusValue.textContent = Number(c.pruneRadius.value).toFixed(1);
+    c.autoSpeedValue.textContent = Number(c.autoSpeed.value).toFixed(1);
+    c.autoMaxPlanTimeValue.textContent = Number(c.autoMaxPlanTime.value).toFixed(1);
+    c.autoStartDelayValue.textContent = Number(c.autoStartDelay.value).toFixed(1);
+    c.autoExecDelayValue.textContent = Number(c.autoExecDelay.value).toFixed(1);
   };
 
   PlannerDemo.prototype.applyScenarioDefaults = function (scenarioKey) {
@@ -301,6 +330,13 @@
       self.updateSliderLabels();
       if (self.state) {
         self.state.autoMaxPlanWindowMs = Number(c.autoMaxPlanTime.value) * 1000;
+      }
+    });
+
+    c.autoStartDelay.addEventListener('input', function () {
+      self.updateSliderLabels();
+      if (self.state) {
+        self.state.autoStartDelayMs = Number(c.autoStartDelay.value) * 1000;
       }
     });
 
@@ -590,8 +626,15 @@
     this.state.autoStallCycles = 0;
     this.state.autoStopReason = '';
     this.state.autoPlanStepCounter = 0;
+    var initialDelayMs = Number(this.controls.autoStartDelay.value) * 1000;
+    if (!Number.isFinite(initialDelayMs)) {
+      initialDelayMs = 0;
+    }
+    initialDelayMs = Math.max(0, initialDelayMs);
+    this.state.autoStartDelayMs = initialDelayMs;
     this.state.autoComputedPlanWindowMs = this.state.autoInitialMinPlanWindowMs;
     this.state.autoLastSegmentLength = 0;
+    this.state.autoEarliestMoveTs = initialDelayMs > 0 ? (performance.now() + initialDelayMs) : 0;
     this.state.moveActive = false;
     this.state.moveExecuteNode = null;
     this.state.pendingRecycleTs = 0;
@@ -638,7 +681,11 @@
 
     if (isAuto) {
       if (this.state.autoRunning) {
-        this.hintEl.textContent = 'Auto cycling... click "Stop" to pause.';
+        if (this.state.autoEarliestMoveTs > 0 && performance.now() < this.state.autoEarliestMoveTs) {
+          this.hintEl.textContent = 'Auto cycling... waiting for initial start delay before first move.';
+        } else {
+          this.hintEl.textContent = 'Auto cycling... click "Stop" to pause.';
+        }
       } else if (this.state.autoStopReason) {
         this.hintEl.textContent = this.state.autoStopReason;
       } else {
@@ -1179,8 +1226,10 @@
       shouldRender = true;
     }
 
-    if (!this.state.moveActive && !this.state.pendingRecycleTs && this.canExecuteCurrentPlan()) {
+    var canStartMoveNow = this.state.autoEarliestMoveTs <= 0 || now >= this.state.autoEarliestMoveTs;
+    if (!this.state.moveActive && !this.state.pendingRecycleTs && this.canExecuteCurrentPlan() && canStartMoveNow) {
       if (this.startMoveSegment(now)) {
+        this.state.autoEarliestMoveTs = 0;
         shouldRender = true;
       }
     }
@@ -1319,16 +1368,18 @@
       autoPlanStepCounter: 0,
       autoRobotSpeed: Number(this.controls.autoSpeed.value),
       autoMaxPlanWindowMs: Number(this.controls.autoMaxPlanTime.value) * 1000,
+      autoStartDelayMs: Number(this.controls.autoStartDelay.value) * 1000,
       autoInitialMinPlanWindowMs: 2000,
       autoMinPlanWindowMs: 300,
       autoAdaptiveFactor: 1.0,
-      autoComputedPlanWindowMs: 1200,
+      autoComputedPlanWindowMs: 2000,
       autoLastSegmentLength: 0,
       autoPlanWindowStartTs: 0,
       autoExecuteDelayMs: Number(this.controls.autoExecDelay.value) * 1000,
       autoAcceptedAtWindowStart: 0,
       autoStallCycles: 0,
       autoStallLimit: 3,
+      autoEarliestMoveTs: 0,
       autoStopReason: '',
       moveActive: false,
       moveStartTs: 0,
@@ -1564,6 +1615,8 @@
         autoSpeedValue: document.getElementById('demo-auto-speed-value'),
         autoMaxPlanTime: document.getElementById('demo-auto-max-plan-time'),
         autoMaxPlanTimeValue: document.getElementById('demo-auto-max-plan-time-value'),
+        autoStartDelay: document.getElementById('demo-auto-start-delay'),
+        autoStartDelayValue: document.getElementById('demo-auto-start-delay-value'),
         autoExecDelay: document.getElementById('demo-auto-exec-delay'),
         autoExecDelayValue: document.getElementById('demo-auto-exec-delay-value'),
         budget: document.getElementById('demo-budget'),
@@ -1600,6 +1653,7 @@
       !root.controls.modeManual || !root.controls.modeAuto ||
       !root.controls.autoStart || !root.controls.autoStop ||
       !root.controls.autoSpeed || !root.controls.autoMaxPlanTime ||
+      !root.controls.autoStartDelay ||
       !root.controls.autoExecDelay ||
       !root.controls.footprint || !root.controls.obsStrength) {
       return;
