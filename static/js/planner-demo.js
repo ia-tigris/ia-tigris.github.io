@@ -42,6 +42,13 @@
     return Math.sqrt(dist2(a, b));
   }
 
+  function trackDemoEvent(eventName, params) {
+    if (typeof window.gtag !== 'function') {
+      return;
+    }
+    window.gtag('event', eventName, params || {});
+  }
+
   function isDescendantOf(node, ancestor) {
     var cur = node;
     while (cur) {
@@ -266,6 +273,9 @@
       self.applyScenarioDefaults(c.scenario.value);
       self.updateSliderLabels();
       self.reset();
+      trackDemoEvent('demo_scenario_change', {
+        scenario: c.scenario.value
+      });
     });
 
     c.budget.addEventListener('input', function () {
@@ -370,6 +380,10 @@
       }
       self.running = true;
       self.state.autoRunning = false;
+      trackDemoEvent('demo_start', {
+        mode: 'manual',
+        scenario: self.state.scenarioId
+      });
       self.tick();
     });
 
@@ -380,6 +394,10 @@
       if (!self.running) {
         return;
       }
+      trackDemoEvent('demo_pause', {
+        mode: 'manual',
+        scenario: self.state.scenarioId
+      });
       self.stopLoops('');
       self.render();
     });
@@ -397,6 +415,10 @@
       if (self.state && self.state.uiMode !== 'manual') {
         return;
       }
+      trackDemoEvent('demo_replan', {
+        mode: 'manual',
+        scenario: self.state ? self.state.scenarioId : ''
+      });
       self.stopLoops('');
       self.replanTreeStep();
       self.render();
@@ -411,10 +433,18 @@
     });
 
     c.autoStart.addEventListener('click', function () {
+      trackDemoEvent('demo_start', {
+        mode: 'auto',
+        scenario: self.state ? self.state.scenarioId : ''
+      });
       self.startAutoCycle();
     });
 
     c.autoStop.addEventListener('click', function () {
+      trackDemoEvent('demo_pause', {
+        mode: 'auto',
+        scenario: self.state ? self.state.scenarioId : ''
+      });
       self.stopAutoCycle('Stopped by user.');
       self.render();
     });
