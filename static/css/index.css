@@ -241,6 +241,33 @@ body {
   flex-wrap: wrap;
 }
 
+.planner-demo-inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  margin-left: auto;
+  padding: 0.18rem 0.58rem;
+  border: 1px solid #d6e0ea;
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: #607487;
+  font-size: 0.69rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.planner-demo-inline-toggle input {
+  margin: 0;
+}
+
+.planner-demo-inline-toggle:hover {
+  border-color: #c7d4e0;
+  background: #eef3f8;
+  color: #4f6477;
+}
+
 .planner-demo-mode-chip {
   display: inline-flex;
   align-items: center;
@@ -412,6 +439,10 @@ body {
 
   .planner-demo-button-row {
     align-items: flex-start;
+  }
+
+  .planner-demo-inline-toggle {
+    margin-left: 0;
   }
 
   .planner-demo-auto-controls {

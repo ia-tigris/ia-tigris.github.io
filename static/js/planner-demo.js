@@ -365,6 +365,10 @@
       self.reset();
     });
 
+    c.showTree.addEventListener('change', function () {
+      self.render();
+    });
+
     c.run.addEventListener('click', function () {
       if (!self.state) {
         return;
@@ -608,6 +612,14 @@
 
     if (kept.length === 0) {
       return false;
+    }
+
+    if (!Array.isArray(this.state.executedPath)) {
+      this.state.executedPath = [{ x: this.state.root.x, y: this.state.root.y }];
+    }
+    var lastExecuted = this.state.executedPath[this.state.executedPath.length - 1];
+    if (!lastExecuted || dist2(lastExecuted, nextRoot) > 1e-6) {
+      this.state.executedPath.push({ x: nextRoot.x, y: nextRoot.y });
     }
 
     nextRoot.parent = null;
@@ -1418,7 +1430,8 @@
       moveTargetPose: { x: scenario.start.x, y: scenario.start.y },
       moveExecuteNode: null,
       pendingRecycleTs: 0,
-      displayPose: { x: scenario.start.x, y: scenario.start.y }
+      displayPose: { x: scenario.start.x, y: scenario.start.y },
+      executedPath: [{ x: scenario.start.x, y: scenario.start.y }]
     };
     this.state.effectiveHorizon = Math.min(this.state.budget, this.state.planningHorizon);
 
@@ -1493,36 +1506,67 @@
   PlannerDemo.prototype.drawTree = function () {
     var ctx = this.ctx;
     var l = this.layout;
+    var showTree = !this.controls.showTree || this.controls.showTree.checked;
 
-    function toCanvas(node) {
+    function toCanvas(point) {
       return {
-        x: l.pad + node.x * l.cellW,
-        y: l.pad + node.y * l.cellH
+        x: l.pad + point.x * l.cellW,
+        y: l.pad + point.y * l.cellH
       };
     }
 
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(40, 70, 120, 0.22)';
-    ctx.beginPath();
-    for (var i = 1; i < this.state.nodes.length; i++) {
-      var n = this.state.nodes[i];
-      var p = toCanvas(n);
-      var q = toCanvas(n.parent);
-      ctx.moveTo(q.x, q.y);
-      ctx.lineTo(p.x, p.y);
+    var executedPath = Array.isArray(this.state.executedPath)
+      ? this.state.executedPath.slice(0)
+      : [];
+    if (this.state.displayPose) {
+      var lastDrawnExecuted = executedPath.length ? executedPath[executedPath.length - 1] : null;
+      if (!lastDrawnExecuted || dist2(lastDrawnExecuted, this.state.displayPose) > 1e-6) {
+        executedPath.push({
+          x: this.state.displayPose.x,
+          y: this.state.displayPose.y
+        });
+      }
     }
-    ctx.stroke();
 
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(255, 176, 0, 0.95)';
-    ctx.beginPath();
-    for (var k = 1; k < this.state.bestPath.length; k++) {
-      var a = toCanvas(this.state.bestPath[k - 1]);
-      var b = toCanvas(this.state.bestPath[k]);
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
+    if (executedPath.length > 1) {
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(20, 129, 161, 0.9)';
+      ctx.beginPath();
+      for (var e = 1; e < executedPath.length; e++) {
+        var prevExecuted = toCanvas(executedPath[e - 1]);
+        var nextExecuted = toCanvas(executedPath[e]);
+        ctx.moveTo(prevExecuted.x, prevExecuted.y);
+        ctx.lineTo(nextExecuted.x, nextExecuted.y);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
+
+    if (showTree) {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(40, 70, 120, 0.22)';
+      ctx.beginPath();
+      for (var i = 1; i < this.state.nodes.length; i++) {
+        var n = this.state.nodes[i];
+        var p = toCanvas(n);
+        var q = toCanvas(n.parent);
+        ctx.moveTo(q.x, q.y);
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    }
+
+    if (this.state.bestPath && this.state.bestPath.length > 1) {
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(255, 176, 0, 0.95)';
+      ctx.beginPath();
+      for (var k = 1; k < this.state.bestPath.length; k++) {
+        var a = toCanvas(this.state.bestPath[k - 1]);
+        var b = toCanvas(this.state.bestPath[k]);
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+      ctx.stroke();
+    }
 
     var poseNode = this.state.displayPose || this.state.root;
     var start = toCanvas(poseNode);
@@ -1668,6 +1712,7 @@
         seed: document.getElementById('demo-seed'),
         deterministic: document.getElementById('demo-deterministic'),
         includeEdge: document.getElementById('demo-include-edge'),
+        showTree: document.getElementById('demo-show-tree'),
         run: document.getElementById('demo-run'),
         pause: document.getElementById('demo-pause'),
         step: document.getElementById('demo-step'),
