@@ -1461,7 +1461,7 @@
       cellH: cellH
     };
 
-    var map = this.state.best ? this.state.best.map : this.state.baseMap;
+    var map = this.state.root && this.state.root.map ? this.state.root.map : this.state.baseMap;
 
     for (var y = 0; y < this.gridH; y++) {
       for (var x = 0; x < this.gridW; x++) {
