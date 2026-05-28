@@ -30,7 +30,8 @@
   rel="stylesheet">
 
   <link rel="stylesheet" href="static/css/bulma.min.css">
-  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="static/css/index.css">
@@ -40,6 +41,10 @@
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <script src="static/js/index.js"></script>
   <script src="static/js/planner-demo.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap" rel="stylesheet">
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-LZ5X68ZYSN"></script>
@@ -51,30 +56,16 @@
   </script>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand">
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-      </a>
-    </div>
-    <div class="navbar-menu">
-      <!-- <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
-        <a class="navbar-item" href="https://pipe-planner.github.io/">
-          <span class="icon">
-            <i class="fas fa-home"></i>
-          </span>
-        </a>
-      </div> -->
-    </div>
-  </nav>
 
-  <section class="hero">
+  <section class="hero hero-video-section">
+    <video class="hero-video-background" autoplay muted loop playsinline aria-hidden="true">
+      <source src="static/videos/intro_vid_final.m4v" type="video/mp4">
+    </video>
+    <div class="hero-video-overlay"></div>
     <div class="hero-body">
       <div class="container is-max-desktop">
         <div class="columns is-centered">
-          <div class="column has-text-centered">
+          <div class="column has-text-centered hero-video-content">
             <h1 class="title is-1 publication-title">IA-TIGRIS: An Incremental and Adaptive Sampling-based Planner for Online Informative Path Planning</h1>
             
             <h3 class="is-size-5 has-text-weight-bold" style="color: orange;">
@@ -179,31 +170,12 @@
                 </a>
               </span>
             </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 </section>
-
-
-<!-- Teaser video-->
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <video poster="" id="tree" autoplay controls muted loop height="100%">
-        <!-- Your video here -->
-        <source src="static/videos/intro_vid_final.m4v"
-        type="video/mp4">
-      </video>
-      <h2 class="subtitle has-text-centered">
-        IA-TIGRIS incrementally building and refining an informative path for a fixed-wing UAV <br> with a forward-facing camera.
-        Pink areas indicate high information gain, and <br>the map is updated as the planner incorporates new observations.
-      </h2>
-    </div>
-  </div>
-</section>
-<!-- End teaser video -->
 
 <!-- Paper abstract -->
 <section class="section hero is-light">
