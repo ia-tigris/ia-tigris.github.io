@@ -23,14 +23,10 @@ body {
 .publication-title {
 }
 
-/* .hero {
-  height: 100%;
-} */
-
 .hero-video-section {
   position: relative;
   overflow: hidden;
-  /* min-height: 38rem; */
+  min-height: 100vh;
   background: #07131d;
   color: #fff;
 }
